@@ -13,10 +13,32 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&family=Rubik:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=22">
-  <script src="js/theme.js?v=22"></script>
+  <link rel="stylesheet" href="css/style.css?v=23">
+  <script src="js/theme.js?v=23"></script>
 </head>
 <body>
+  <div class="intro" id="intro" role="dialog" aria-modal="true" aria-label="פתיחה" tabindex="-1" hidden>
+    <button type="button" class="intro-skip" id="introSkip">דלג</button>
+    <div class="intro-scene" id="sceneA">
+      <h2 class="intro-q">רוצה לבנות הרגלים,<br>ומשהו תמיד נתקע?</h2>
+      <ul class="intro-list">
+        <li>פתחת את הטלפון לבדוק דבר אחד, ומצאת את עצמך גולל 20 דקות</li>
+        <li>התחלת הרגל חדש, ונטשת אחרי שבוע</li>
+        <li>אתה יודע בדיוק מה צריך לעשות, ופשוט לא עושה</li>
+      </ul>
+    </div>
+    <div class="intro-scene" id="sceneB" hidden>
+      <p class="intro-punch">זה לא כוח רצון. <mark>זה עיצוב.</mark></p>
+      <div class="phone" id="phone" aria-hidden="true">
+        <div class="ph-notch"></div>
+        <div class="ph-stage" id="phStage"></div>
+        <div class="ph-dots" id="phDots"><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
+      <p class="intro-cap" id="introCap">4 מסכים. 24 אפליקציות. 9 התראות.</p>
+      <button type="button" class="btn primary intro-go" id="introGo">בוא נתחיל</button>
+    </div>
+  </div>
+
   <a class="skip" href="#main">דלג לתוכן</a>
 
   <header class="top">
@@ -39,24 +61,9 @@
   </header>
 
   <main id="main" class="wrap">
-    <section class="hero" id="stuck">
-      <h1>רוצה לבנות הרגלים, ומשהו תמיד נתקע?</h1>
-      <p class="stuck-q">נשמע מוכר? סמן מה מתאים לך:</p>
-      <ul class="stuck-list">
-        <li><button type="button" class="stuck-item" aria-pressed="false">פתחתי את הטלפון לבדוק דבר אחד, ומצאתי את עצמי גולל 20 דקות</button></li>
-        <li><button type="button" class="stuck-item" aria-pressed="false">התחלתי הרגל חדש, ונטשתי אחרי שבוע</button></li>
-        <li><button type="button" class="stuck-item" aria-pressed="false">אני יודע בדיוק מה צריך לעשות, ופשוט לא עושה</button></li>
-      </ul>
-      <div class="stuck-bar" aria-hidden="true"><span></span><span></span><span></span></div>
-      <div class="stuck-punch" id="stuckPunch" aria-live="polite" hidden>
-        <p class="punch-big">זה לא כוח רצון. <mark>זה עיצוב.</mark></p>
-        <p class="sub">הרגל לא נבנה ממוטיבציה. הוא נבנה מצעד קטן ברגע קבוע ביום, ומסביבה שמזכירה לך אותו. כאן תבחר מי אתה רוצה להיות, תקבל שני הרגלים קטנים, ותסדר את הטלפון כך שיעבוד בשבילך ולא נגדך.</p>
-      </div>
-      <p class="sub" id="stuckSub">כל הרגל הוא הצבעה בעד האדם שאתה רוצה להיות. בוחרים מי רוצים להיות, מקבלים שני הרגלים קטנים, וממשיכים איתם ב־Todoist ישר ממסך הבית.</p>
-      <div class="actions hero-actions">
-        <a class="btn primary" href="#build">בוא נתחיל</a>
-        <a class="btn ghost" href="#screen">איך מסדרים את הטלפון</a>
-      </div>
+    <section class="hero">
+      <h1>כל הרגל הוא הצבעה בעד האדם שאתה רוצה להיות.</h1>
+      <p class="sub">כתוב מי אתה רוצה להיות, בחר הרגלים וקבע מתי לעשות אותם. בסוף תקבל קובץ סיכום, וההרגלים יעברו ל־Todoist, שם תמשיך לעקוב אחריהם.</p>
     </section>
 
     <form class="panel" id="build" autocomplete="off">
@@ -318,24 +325,6 @@
       <h2>מסך אחד. וידג'ט אחד. 8 אפליקציות.</h2>
       <p class="muted">הטריק שהכי עובד: מסך בית אחד בלבד. למעלה הווידג'ט הגדול של Todoist עם ההרגלים שלך, מתחתיו 8 אפליקציות שאתה באמת פותח כל יום, וכל השאר מחוץ לעין. צריך משהו אחר? מחפשים אותו. כל פעם שתפתח את הטלפון, הדבר הראשון שתראה הוא מי שאתה רוצה להיות, ולא 30 התראות אדומות.</p>
 
-      <div class="screen-demo">
-        <div class="phone" id="phone" aria-hidden="true">
-          <div class="ph-notch"></div>
-          <div class="ph-stage" id="phStage"></div>
-          <div class="ph-dots" id="phDots"><i class="on"></i><i></i><i></i><i></i></div>
-        </div>
-        <div class="screen-ctrl">
-          <p class="screen-state" id="screenState" aria-live="polite">לפני: 4 מסכים, 24 אפליקציות, 9 התראות.</p>
-          <label class="scrub">
-            <span>לפני</span>
-            <input type="range" id="scrub" min="0" max="100" value="0" aria-label="לפני ואחרי: גרור כדי לנקות את המסך">
-            <span>אחרי</span>
-          </label>
-          <button type="button" class="btn primary" id="cleanBtn">נקה לי את המסך</button>
-          <p class="note" id="screenNote">בווידג'ט יופיעו ההרגלים שבחרת בתוכנית.</p>
-        </div>
-      </div>
-
       <h3 class="screen-h">ככה עושים את זה באייפון</h3>
       <ol class="guide-steps screen-steps">
         <li><b>בוחרים 8 אפליקציות</b> שבאמת פותחים כל יום. 4 מהן הולכות לשורה התחתונה (ה־Dock).</li>
@@ -353,20 +342,20 @@
     </section>
   </main>
 
-  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 22</span></footer>
+  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <button type="button" class="link replay" id="replayIntro">לצפות שוב בפתיחה</button> <span class="ver">גרסה 23</span></footer>
 
   <div id="printSummary" class="print-summary"></div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 
-  <script src="config.js?v=22"></script>
-  <script src="js/data.js?v=22"></script>
-  <script src="js/ideas.js?v=22"></script>
-  <script src="js/data-extra.js?v=22"></script>
-  <script src="js/ai.js?v=22"></script>
-  <script src="js/todoist.js?v=22"></script>
-  <script src="js/app.js?v=22"></script>
-  <script src="js/screen.js?v=22"></script>
+  <script src="config.js?v=23"></script>
+  <script src="js/data.js?v=23"></script>
+  <script src="js/ideas.js?v=23"></script>
+  <script src="js/data-extra.js?v=23"></script>
+  <script src="js/ai.js?v=23"></script>
+  <script src="js/todoist.js?v=23"></script>
+  <script src="js/app.js?v=23"></script>
+  <script src="js/screen.js?v=23"></script>
 </body>
 </html>
