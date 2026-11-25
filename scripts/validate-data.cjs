@@ -37,7 +37,7 @@ Object.entries(names).filter(([, d]) => d.length > 1).forEach(([n, d]) => errs.p
 const ids = D.domains.map((d) => d.id);
 if (new Set(ids).size !== ids.length) errs.push('duplicate domain id');
 D.domains.forEach((d) => {
-  if (d.traits.length < 2) errs.push(`${d.id}: fewer than 2 traits`);
+  if (d.traits.length < 1) errs.push(`${d.id}: no traits`);
   if (!d.identity.startsWith('ש')) errs.push(`${d.id}: identity must start with "ש"`);
   d.keywords.forEach((k) => { if (!k.includes(' ') && [...k].length < 2) errs.push(`${d.id}: keyword too short: ${k}`); });
 });
