@@ -9,7 +9,7 @@
   /* ---------- anonymous counts: how far people get ----------
      No cookies, no id, no IP: once the page is hidden, one request says which steps this
      visit reached (for example ["v","q2","s2","built"]). The server only adds to daily totals. */
-  var EVENTS = /^(v|q[2-5]|s[2-5]|built|td|ics|file)$/;
+  var EVENTS = /^(v|q[2-5]|s[2-5]|built|td|ics|file|tip)$/;
   var seenEv = {}, sentEv = {};
   var cfg = window.HABITS_CONFIG || {};
   var base = typeof cfg.proxyUrl === 'string' ? cfg.proxyUrl.replace(/\/+$/, '') : '';
@@ -23,6 +23,14 @@
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flush(); });
   window.addEventListener('pagehide', flush);
   window.HabitStats.mark('v');
+
+  /* ---------- "buy me a coffee": shown only when config.js has an https link ---------- */
+  var tipUrl = typeof cfg.donateUrl === 'string' ? cfg.donateUrl.trim() : '';
+  if (/^https:\/\/[^\s"'<>]+$/.test(tipUrl)) {
+    $('tipLink').href = tipUrl;
+    $('tipBox').hidden = false;
+    $('tipLink').addEventListener('click', function () { window.HabitStats.mark('tip'); });
+  }
 
   function apply(n, push) {
     n = Math.min(N, Math.max(1, n | 0));

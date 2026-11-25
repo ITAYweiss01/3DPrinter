@@ -71,7 +71,7 @@
   var FUNNEL = [
     ['v', 'נכנסו לאתר'], ['q2', 'ענו על השאלה הראשונה'], ['q5', 'הגיעו לשאלה האחרונה'], ['built', 'בנו תוכנית'],
     ['s3', 'הגיעו ל"מתי"'], ['s4', 'הגיעו לשליחה'], ['td', 'שלחו ל־Todoist'], ['ics', 'הורידו קובץ יומן'],
-    ['file', 'שמרו סיכום'], ['s5', 'הגיעו ל"סדר את הטלפון"']
+    ['file', 'שמרו סיכום'], ['s5', 'הגיעו ל"סדר את הטלפון"'], ['tip', 'לחצו על "להזמין לקפה"']
   ];
   function loadStats() {
     return api('/admin/stats').then(function (data) { statDays = data.days || []; $('stats').hidden = false; renderStats(); }, function () {});
