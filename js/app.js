@@ -28,12 +28,38 @@
     return String(s || '').replace(/[֑-ׇ]/g, '').replace(/[״"׳'`]/g, '').toLowerCase();
   }
 
+  // Hebrew-aware keyword match: whole words, optional one- or two-letter prefixes
+  // (ו ה ב ל מ ש כ) and short suffixes, so "ים" never matches inside "ימים".
+  var PREFIX = 'והבלמשכ';
+  function tokenVariants(tok) {
+    var v = [tok];
+    if (tok.length > 3 && PREFIX.indexOf(tok[0]) !== -1) {
+      v.push(tok.slice(1));
+      if (tok.length > 4 && PREFIX.indexOf(tok[1]) !== -1) v.push(tok.slice(2));
+    }
+    return v;
+  }
+  function hasKeyword(text, tokens, kw) {
+    kw = clean(kw);
+    if (kw.indexOf(' ') !== -1) return text.indexOf(kw) !== -1;
+    for (var i = 0; i < tokens.length; i++) {
+      var vs = tokenVariants(tokens[i]);
+      for (var j = 0; j < vs.length; j++) {
+        var w = vs[j];
+        if (w === kw) return true;
+        if (kw.length >= 3 && w.indexOf(kw) === 0 && w.length - kw.length <= 3) return true;
+      }
+    }
+    return false;
+  }
+
   function matchDomains(goal) {
     var text = clean(goal);
+    var tokens = text.split(/[^\u05d0-\u05eaa-z0-9]+/).filter(Boolean);
     return D.domains
       .map(function (d, i) {
         var score = 0;
-        d.keywords.forEach(function (k) { if (text.indexOf(clean(k)) !== -1) score++; });
+        d.keywords.forEach(function (k) { if (hasKeyword(text, tokens, k)) score++; });
         return { d: d, score: score, i: i };
       })
       .filter(function (x) { return x.score > 0; })
@@ -313,9 +339,16 @@
       var del = document.createElement('button');
       del.type = 'button'; del.className = 'tr-del'; del.textContent = '×';
       del.setAttribute('aria-label', 'מחק: ' + h.text);
+      // two-step delete inside the page (no browser confirm dialog)
       del.addEventListener('click', function () {
-        if (Object.keys(h.done).length && !confirm('למחוק את "' + h.text + '" ואת כל הסימונים שלו?')) return;
-        removeHabit(h.id);
+        if (!Object.keys(h.done).length || del.classList.contains('armed')) { removeHabit(h.id); return; }
+        del.classList.add('armed');
+        del.textContent = 'למחוק?';
+        del.setAttribute('aria-label', 'לחץ שוב כדי למחוק את ' + h.text + ' ואת כל הסימונים שלו');
+        setTimeout(function () {
+          if (!del.isConnected) return;
+          del.classList.remove('armed'); del.textContent = '×'; del.setAttribute('aria-label', 'מחק: ' + h.text);
+        }, 3000);
       });
       var tx = document.createElement('span'); tx.textContent = h.text;
       nm.appendChild(del); nm.appendChild(tx);
@@ -472,7 +505,7 @@
   /* ---------- AI mode ---------- */
   (function () {
     var on = !!(window.HabitAI && window.HabitAI.configured());
-    $('modeLabel').textContent = on ? 'Claude מחובר: כל מטרה מקבלת תוכנית אישית' : 'מצב מקומי: ספרייה של 11 תחומים';
+    $('modeLabel').textContent = on ? 'Claude מחובר: כל מטרה מקבלת תוכנית אישית' : 'מצב מקומי: ספרייה של ' + D.domains.length + ' תחומים';
     $('modeDot').classList.toggle('on', on);
   })();
 

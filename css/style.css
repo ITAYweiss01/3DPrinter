@@ -242,3 +242,4 @@ dialog input[type="password"], dialog input[type="url"] { width: 100%; font: inh
 .err-line { color: var(--danger); font-size: 14px; min-height: 1.2em; margin: 10px 0 0; }
 .captcha:empty { display: none; }
 .captcha { margin-top: 14px; }
+.tr-del.armed { opacity: 1; color: var(--danger); font-size: 12px; font-weight: 700; white-space: nowrap; }
