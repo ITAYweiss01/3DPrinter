@@ -22,31 +22,32 @@
 
 ## חיבור ל־Claude
 
-בכפתור **הגדרות AI** באתר יש שתי אפשרויות:
-
-### 1. מפתח API אישי (הכי מהיר)
-מדביקים מפתח מ־[console.anthropic.com](https://console.anthropic.com). המפתח נשמר רק בדפדפן ונשלח רק ל־`api.anthropic.com`.
-מתאים לשימוש אישי. **לא** להכניס מפתח לקוד או ל־`config.js`, כי האתר ציבורי.
-
-### 2. Cloudflare Worker (לאתר ציבורי)
-ה־Worker בתיקייה `worker/` מחזיק את המפתח בצד השרת, כך שכל מבקר יכול להשתמש ב־Claude בלי מפתח.
-הוא מעביר רק בקשות ל־`/v1/messages`, נועל את המודל ומגביל את `max_tokens`.
+המפתח של Claude לא נמצא באתר בכלל. הוא נשמר רק ב־Cloudflare Worker (תיקיית `worker/`),
+והאתר שולח לו רק את המטרה ואת הזמן הפנוי. פרטים על כל אמצעי ההגנה ב־[SECURITY.md](SECURITY.md).
 
 ```bash
 cd worker
+npm install
 npx wrangler login
-npx wrangler secret put ANTHROPIC_API_KEY     # מדביקים את המפתח
-# ב־wrangler.toml: ALLOWED_ORIGINS = "https://<user>.github.io"
+npx wrangler secret put ANTHROPIC_API_KEY     # מדביקים את המפתח. הוא לא נשמר בשום קובץ
+# ב־wrangler.toml: ALLOWED_ORIGINS = כתובת האתר שלכם
 npx wrangler deploy
 ```
 
-אחר כך מכניסים את הכתובת שקיבלתם ל־`config.js`:
+אחר כך מכניסים את כתובת ה־Worker ל־`config.js`:
 
 ```js
-window.HABITS_CONFIG = { proxyUrl: 'https://habits-proxy.<you>.workers.dev' };
+window.HABITS_CONFIG = { proxyUrl: 'https://habits-proxy.<you>.workers.dev', turnstileSiteKey: '' };
 ```
 
-שימו לב: כל בקשה עולה כסף בחשבון שלכם. כדאי להגדיר מגבלת הוצאה ב־Console.
+אופציונלי, הגנה מבוטים: יוצרים widget ב־Cloudflare Turnstile, שמים את ה־site key (ציבורי) ב־`config.js`,
+ואת ה־secret key ב־Worker: `npx wrangler secret put TURNSTILE_SECRET`.
+
+אם ה־Worker על דומיין משלכם (לא `workers.dev`), מוסיפים אותו ל־`connect-src` ב־Content-Security-Policy שב־`index.html`.
+
+**חשוב:** הגדירו מגבלת הוצאה חודשית ב־Anthropic Console.
+
+בדיקות האבטחה של ה־Worker: `cd worker && npm test`.
 
 ## הרצה מקומית
 
@@ -58,7 +59,7 @@ python3 -m http.server 8000
 ## פרסום ב־GitHub Pages
 
 ה־workflow ב־`.github/workflows/pages.yml` מפרסם את האתר בכל push ל־`main`.
-צריך להפעיל פעם אחת: **Settings → Pages → Source: GitHub Actions**.
+צריך להפעיל פעם אחת: **Settings → Pages → Source: GitHub Actions**. רק קבצי האתר מתפרסמים, בלי `worker/`.
 
 ## הוספת תחום או הרגל
 
@@ -72,10 +73,11 @@ index.html            הדף
 css/style.css         עיצוב (בהיר/כהה, RTL, מותאם לנייד)
 js/data.js            ספריית התחומים, התכונות וההרגלים
 js/app.js             המחולל המקומי, המפה והמעקב
-js/ai.js              מצב Claude (Anthropic SDK)
-config.js             כתובת ה־Worker לפריסה
-vendor/               ה־SDK של Anthropic (1.6.0) כקובץ אחד לדפדפן
-worker/               Cloudflare Worker שמחזיק את המפתח
+js/ai.js              מצב Claude: שולח מטרה ל־Worker (בלי מפתח)
+js/theme.js           מצב בהיר/כהה (בלי סקריפט inline, בגלל ה־CSP)
+config.js             כתובת ה־Worker (ציבורי, בלי מפתחות)
+worker/               Cloudflare Worker: המפתח, הפרומפט, הגבלת קצב ובדיקות אבטחה
+SECURITY.md           מדיניות האבטחה ומה לעשות אם מפתח דלף
 sw.js                 מטמון לעבודה בלי אינטרנט
 manifest.webmanifest  התקנה כאפליקציה
 ```

@@ -240,3 +240,5 @@ dialog input[type="password"], dialog input[type="url"] { width: 100%; font: inh
 .opt b { display: block; font-weight: 700; }
 .opt small { display: block; color: var(--muted); font-size: 13px; line-height: 1.45; }
 .err-line { color: var(--danger); font-size: 14px; min-height: 1.2em; margin: 10px 0 0; }
+.captcha:empty { display: none; }
+.captcha { margin-top: 14px; }

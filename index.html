@@ -2,6 +2,8 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.workers.dev; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>מי אני רוצה להיות</title>
   <meta name="description" content="כתוב מי אתה רוצה להיות, קבל מפת תכונות והרגלים קטנים לפי Atomic Habits, ועקוב אחריהם כל יום.">
@@ -12,9 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap">
   <link rel="stylesheet" href="css/style.css">
-  <script>
-    try { var t = localStorage.getItem('ah-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
-  </script>
+  <script src="js/theme.js"></script>
 </head>
 <body>
   <a class="skip" href="#main">דלג לתוכן</a>
@@ -47,7 +47,6 @@
       <div class="mode">
         <span class="mode-dot" id="modeDot" aria-hidden="true"></span>
         <span id="modeLabel">מצב מקומי: ספרייה של 11 תחומים</span>
-        <button type="button" class="link" id="aiOpen">הגדרות AI</button>
       </div>
       <label for="goal">מה אתה רוצה לעשות או להשיג?</label>
       <textarea id="goal" maxlength="600" placeholder="למשל: אני רוצה להיות בכושר, להצליח בלימודים ולהיות יותר מסודר"></textarea>
@@ -67,6 +66,7 @@
         </div>
       </fieldset>
 
+      <div id="captcha" class="captcha"></div>
       <div class="actions">
         <button type="submit" class="btn primary" id="go">בנה לי הרגלים</button>
         <button type="button" class="btn" id="stop" hidden>עצור</button>
@@ -148,35 +148,10 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-  <dialog id="aiDialog" aria-labelledby="aiTitle">
-    <form id="aiForm" autocomplete="off">
-      <h2 id="aiTitle">חיבור ל־Claude</h2>
-      <p class="muted">עם Claude, כל מטרה שתכתוב מקבלת תכונות והרגלים שנכתבים במיוחד בשבילך, לא רק מהספרייה.</p>
-      <fieldset class="opts">
-        <legend class="sr">מצב</legend>
-        <label class="opt"><input type="radio" name="aimode" value="off"><span><b>מקומי</b><small>בלי אינטרנט ובלי מפתח. ספרייה של 11 תחומים.</small></span></label>
-        <label class="opt"><input type="radio" name="aimode" value="key"><span><b>מפתח API אישי</b><small>מדביקים מפתח מ־console.anthropic.com. נשמר רק בדפדפן הזה ונשלח רק ל־Anthropic.</small></span></label>
-        <label class="opt"><input type="radio" name="aimode" value="proxy"><span><b>שרת Worker</b><small>כתובת של Worker שמחזיק את המפתח (ראו README). מתאים לאתר ציבורי.</small></span></label>
-      </fieldset>
-      <div class="field" id="keyField" hidden>
-        <label for="aiKey">מפתח API</label>
-        <input id="aiKey" type="password" dir="ltr" placeholder="sk-ant-..." spellcheck="false">
-      </div>
-      <div class="field" id="proxyField" hidden>
-        <label for="aiProxy">כתובת ה־Worker</label>
-        <input id="aiProxy" type="url" dir="ltr" placeholder="https://habits-proxy.example.workers.dev" spellcheck="false">
-      </div>
-      <p class="err-line" id="aiErr" role="alert"></p>
-      <div class="actions">
-        <button type="submit" class="btn primary">שמור</button>
-        <button type="button" class="btn ghost" id="aiCancel">ביטול</button>
-      </div>
-    </form>
-  </dialog>
 
   <script src="config.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/ai.js"></script>
   <script src="js/app.js"></script>
-  <script type="module" src="js/ai.js"></script>
 </body>
 </html>

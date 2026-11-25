@@ -170,7 +170,8 @@
         x2: (cx + (R - r) * dx).toFixed(1), y2: (cy + (R - r) * dy).toFixed(1)
       }));
       var bx = cx + R * dx, by = cy + R * dy;
-      var g = sv('g', { 'class': 'bubble pop', tabindex: '0', role: 'button', 'aria-label': t.name, 'data-i': i, style: 'animation-delay:' + (i * 50) + 'ms' });
+      var g = sv('g', { 'class': 'bubble pop', tabindex: '0', role: 'button', 'aria-label': t.name, 'data-i': i });
+      g.style.animationDelay = (i * 50) + 'ms';
       g.appendChild(sv('circle', { cx: bx.toFixed(1), cy: by.toFixed(1), r: r }));
       var ls = labelLines(t.name);
       ls.forEach(function (line, k) {
@@ -370,7 +371,10 @@
   /* ---------- laws ---------- */
   D.laws.forEach(function (l) {
     var li = document.createElement('li');
-    li.innerHTML = '<span class="n"></span><div><h3></h3><p></p></div>';
+    var n0 = document.createElement('span'); n0.className = 'n';
+    var d0 = document.createElement('div');
+    d0.appendChild(document.createElement('h3')); d0.appendChild(document.createElement('p'));
+    li.appendChild(n0); li.appendChild(d0);
     li.querySelector('.n').textContent = l.n;
     li.querySelector('h3').textContent = l.title;
     li.querySelector('p').textContent = l.tip;
@@ -465,45 +469,12 @@
     c.addEventListener('click', function () { $('goal').value = c.getAttribute('data-ex'); $('goal').focus(); });
   });
 
-  /* ---------- AI settings ---------- */
-  function refreshMode() {
-    var ai = window.HabitAI, on = !!(ai && ai.configured());
+  /* ---------- AI mode ---------- */
+  (function () {
+    var on = !!(window.HabitAI && window.HabitAI.configured());
     $('modeLabel').textContent = on ? 'Claude מחובר: כל מטרה מקבלת תוכנית אישית' : 'מצב מקומי: ספרייה של 11 תחומים';
     $('modeDot').classList.toggle('on', on);
-  }
-  function openSettings() {
-    var ai = window.HabitAI;
-    if (!ai) { toast('מצב AI עדיין נטען...'); return; }
-    var s = ai.getSettings();
-    var r = document.querySelector('input[name="aimode"][value="' + s.mode + '"]');
-    if (r) r.checked = true;
-    $('aiKey').value = s.key || '';
-    $('aiProxy').value = s.proxyUrl || '';
-    syncSettingsFields();
-    $('aiErr').textContent = '';
-    $('aiDialog').showModal();
-  }
-  function syncSettingsFields() {
-    var m = (document.querySelector('input[name="aimode"]:checked') || {}).value;
-    $('keyField').hidden = m !== 'key';
-    $('proxyField').hidden = m !== 'proxy';
-  }
-  Array.prototype.forEach.call(document.querySelectorAll('input[name="aimode"]'), function (r) { r.addEventListener('change', syncSettingsFields); });
-  $('aiOpen').addEventListener('click', openSettings);
-  $('aiCancel').addEventListener('click', function () { $('aiDialog').close(); });
-  $('aiForm').addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var m = (document.querySelector('input[name="aimode"]:checked') || {}).value || 'off';
-    var key = $('aiKey').value.trim(), proxy = $('aiProxy').value.trim();
-    if (m === 'key' && !/^sk-ant-/.test(key)) { $('aiErr').textContent = 'מפתח של Anthropic מתחיל ב־sk-ant-'; $('aiKey').focus(); return; }
-    if (m === 'proxy' && !/^https:\/\//.test(proxy)) { $('aiErr').textContent = 'הכתובת צריכה להתחיל ב־https://'; $('aiProxy').focus(); return; }
-    window.HabitAI.saveSettings({ mode: m, key: m === 'key' ? key : '', proxyUrl: m === 'proxy' ? proxy : '' });
-    $('aiDialog').close();
-    refreshMode();
-    toast(m === 'off' ? 'עברת למצב מקומי' : 'Claude מחובר');
-  });
-  window.addEventListener('habitai-ready', refreshMode);
-  if (window.HabitAI) refreshMode();
+  })();
 
   $('share').addEventListener('click', function () {
     var url = location.href;

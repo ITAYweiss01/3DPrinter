@@ -1,0 +1,2 @@
+# Copy to .dev.vars for `wrangler dev`. .dev.vars is git-ignored; never commit it.
+ANTHROPIC_API_KEY=sk-ant-REPLACE_ME
