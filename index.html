@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&family=Rubik:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=15">
-  <script src="js/theme.js?v=15"></script>
+  <link rel="stylesheet" href="css/style.css?v=16">
+  <script src="js/theme.js?v=16"></script>
 </head>
 <body>
   <a class="skip" href="#main">דלג לתוכן</a>
@@ -49,13 +49,42 @@
         <span class="mode-dot" id="modeDot" aria-hidden="true"></span>
         <span id="modeLabel">הצעות מתוך 37 תחומים</span>
       </div>
-      <label for="goal">מי אתה רוצה להיות, או מה אתה רוצה להשיג?</label>
-      <textarea id="goal" maxlength="600" placeholder="למשל: אני רוצה להיות בכושר, להצליח בלימודים ולהיות יותר מסודר"></textarea>
-      <div class="ideas">
-        <p class="ideas-q">לא בטוח מאיפה להתחיל? אולי משהו מזה מדבר אליך:</p>
-        <div class="row" id="ideas" aria-label="רעיונות"></div>
-        <button type="button" class="link" id="moreIdeas">עוד רעיונות ↻</button>
+      <fieldset class="q">
+        <legend>על מה אתה רוצה לעבוד? <span class="q-hint">עד 3</span></legend>
+        <div class="row" id="areas" aria-label="תחומים"></div>
+        <button type="button" class="link" id="moreAreas" aria-expanded="false">עוד תחומים</button>
+      </fieldset>
+
+      <div class="q">
+        <label for="qFuture">מה היית רוצה שיגידו עליך בעוד שנה?</label>
+        <input id="qFuture" maxlength="160" placeholder="למשל: שהוא תמיד מגיע רגוע ומוכן">
       </div>
+
+      <div class="q">
+        <label for="qBlock">מה הכי מפריע לך היום?</label>
+        <input id="qBlock" maxlength="160" placeholder="למשל: אני גולל בטלפון עד מאוחר וקם עייף">
+      </div>
+
+      <fieldset class="q">
+        <legend>מתי ביום הכי קל לך להוסיף משהו קטן?</legend>
+        <div class="seg seg4" role="radiogroup">
+          <label><input type="radio" name="when" value="morning"><span>בבוקר</span></label>
+          <label><input type="radio" name="when" value="noon"><span>בצהריים</span></label>
+          <label><input type="radio" name="when" value="evening"><span>בערב</span></label>
+          <label><input type="radio" name="when" value="any" checked><span>לא משנה</span></label>
+        </div>
+      </fieldset>
+
+      <details class="free" id="freeBox">
+        <summary>מעדיף לכתוב בחופשיות?</summary>
+        <label for="goal" class="sr">מי אתה רוצה להיות, או מה אתה רוצה להשיג?</label>
+        <textarea id="goal" maxlength="400" placeholder="למשל: אני רוצה להיות בכושר, להצליח בלימודים ולהיות יותר מסודר"></textarea>
+        <div class="ideas">
+          <p class="ideas-q">אולי משהו מזה מדבר אליך:</p>
+          <div class="row" id="ideas" aria-label="רעיונות"></div>
+          <button type="button" class="link" id="moreIdeas">עוד רעיונות ↻</button>
+        </div>
+      </details>
 
       <fieldset class="field">
         <legend>כמה זמן ביום יש לך להרגלים?</legend>
@@ -94,6 +123,7 @@
         <div class="stack">
           <p class="k">ההרגל של שתי דקות</p>
           <p class="stack-line" id="dstack"></p>
+          <p class="start-here" id="startHere" hidden>מומלץ להתחיל כאן</p>
           <button type="button" class="btn small" id="addStarter">+ הוסף לתוכנית</button>
         </div>
 
@@ -119,7 +149,8 @@
     <section id="plan" class="panel plan">
       <span class="mnum" aria-hidden="true">2</span>
       <h2>מתי תעשה כל הרגל?</h2>
-      <p class="muted">הוסף הרגלים מהמפה (+) או כתוב הרגל משלך. לכל הרגל בחר כל יום או ימים מסוימים, ואם תרצה גם שעה. לפי זה ייווצרו המשימות ב־Todoist.</p>
+      <p class="muted">בחר הרגל אחד או שניים, לא יותר. מי שמתחיל קטן מחזיק מעמד. לכל הרגל קבע כל יום או ימים מסוימים, ואם תרצה גם שעה. כשההרגלים יהיו אוטומטיים, תחזור להוסיף עוד.</p>
+      <p class="plan-limit" id="planLimit" hidden></p>
       <ul id="planList" class="plan-list"></ul>
       <form class="tr-add" id="trAdd" autocomplete="off">
         <label for="newHabit" class="sr">הרגל חדש</label>
@@ -273,19 +304,19 @@
     </section>
   </main>
 
-  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 15</span></footer>
+  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 16</span></footer>
 
   <div id="printSummary" class="print-summary"></div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 
-  <script src="config.js?v=15"></script>
-  <script src="js/data.js?v=15"></script>
-  <script src="js/ideas.js?v=15"></script>
-  <script src="js/data-extra.js?v=15"></script>
-  <script src="js/ai.js?v=15"></script>
-  <script src="js/todoist.js?v=15"></script>
-  <script src="js/app.js?v=15"></script>
+  <script src="config.js?v=16"></script>
+  <script src="js/data.js?v=16"></script>
+  <script src="js/ideas.js?v=16"></script>
+  <script src="js/data-extra.js?v=16"></script>
+  <script src="js/ai.js?v=16"></script>
+  <script src="js/todoist.js?v=16"></script>
+  <script src="js/app.js?v=16"></script>
 </body>
 </html>
