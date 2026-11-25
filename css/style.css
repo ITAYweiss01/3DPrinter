@@ -1,34 +1,41 @@
+/* Identity: the squared school notebook. Blue grid paper, red margin line on the
+   right (Hebrew notebooks), ballpoint-blue ink, and one yellow highlighter reserved
+   for the identity sentence. Handwriting (Playpen Sans Hebrew) for headings, Rubik for text. */
 :root {
-  --bg: #f5f6f8; --surface: #ffffff; --fg: #1d2230; --muted: #5b6372;
-  --line: #b9bfcb; --border: #dde1e8;
-  --accent: #0f6e56; --accent-ink: #ffffff; --accent-soft: #e1f5ee;
-  --t-fill: #e1f5ee; --t-stroke: #0f6e56; --t-text: #085041;
-  --p-fill: #eeedfe; --p-stroke: #534ab7; --p-text: #3c3489;
-  --warn-bg: #fdf3e1; --warn-fg: #7a4b06;
-  --danger: #a32d2d;
-  --shadow: 0 1px 2px rgba(20, 30, 50, .05), 0 4px 16px rgba(20, 30, 50, .04);
-  --font: 'Heebo', 'Arial Hebrew', Arial, sans-serif;
+  --bg: #fbfcfe; --surface: #ffffff; --fg: #2a2f3b; --muted: #5e6677;
+  --line: #b8c3d6; --border: #dce5f3; --grid: #e6edf8;
+  --accent: #1d3faf; --accent-ink: #ffffff; --accent-soft: #e6ecfb;
+  --t-fill: #ffffff; --t-stroke: #1d3faf; --t-text: #1d3faf;
+  --p-fill: #ffe14d; --p-stroke: #c9a800; --p-text: #2a2f3b;
+  --margin: #d8344b; --hl: #ffe14d; --hl-ink: #1e1b10;
+  --warn-bg: #fff4c7; --warn-fg: #6b5300;
+  --danger: #b3261e;
+  --shadow: none;
+  --font: 'Rubik', 'Arial Hebrew', Arial, sans-serif;
+  --font-hand: 'Playpen Sans Hebrew', 'Rubik', 'Arial Hebrew', sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #12151b; --surface: #1b1f27; --fg: #eceef3; --muted: #a0a7b4;
-    --line: #4a5262; --border: #2c323d;
-    --accent: #5dcaa5; --accent-ink: #04342c; --accent-soft: #0d3a30;
-    --t-fill: #0d3a30; --t-stroke: #5dcaa5; --t-text: #9fe1cb;
-    --p-fill: #2b2766; --p-stroke: #afa9ec; --p-text: #cecbf6;
-    --warn-bg: #3a2c12; --warn-fg: #f3cf8e;
-    --danger: #f09595; --shadow: none; color-scheme: dark;
+    --bg: #0f1a30; --surface: #16233f; --fg: #e7ecf7; --muted: #a3aec6;
+    --line: #3a4a6e; --border: #22325a; --grid: #172642;
+    --accent: #9db6ff; --accent-ink: #0f1a30; --accent-soft: #1e2f57;
+    --t-fill: #16233f; --t-stroke: #9db6ff; --t-text: #cfdbff;
+    --p-fill: #ffe14d; --p-stroke: #e8c200; --p-text: #1e1b10;
+    --margin: #e0566a; --hl: #ffe14d; --hl-ink: #1e1b10;
+    --warn-bg: #3a2f0c; --warn-fg: #ffe9a3;
+    --danger: #ff9a8f; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #12151b; --surface: #1b1f27; --fg: #eceef3; --muted: #a0a7b4;
-  --line: #4a5262; --border: #2c323d;
-  --accent: #5dcaa5; --accent-ink: #04342c; --accent-soft: #0d3a30;
-  --t-fill: #0d3a30; --t-stroke: #5dcaa5; --t-text: #9fe1cb;
-  --p-fill: #2b2766; --p-stroke: #afa9ec; --p-text: #cecbf6;
-  --warn-bg: #3a2c12; --warn-fg: #f3cf8e;
-  --danger: #f09595; --shadow: none; color-scheme: dark;
+  --bg: #0f1a30; --surface: #16233f; --fg: #e7ecf7; --muted: #a3aec6;
+  --line: #3a4a6e; --border: #22325a; --grid: #172642;
+  --accent: #9db6ff; --accent-ink: #0f1a30; --accent-soft: #1e2f57;
+  --t-fill: #16233f; --t-stroke: #9db6ff; --t-text: #cfdbff;
+  --p-fill: #ffe14d; --p-stroke: #e8c200; --p-text: #1e1b10;
+  --margin: #e0566a; --hl: #ffe14d; --hl-ink: #1e1b10;
+  --warn-bg: #3a2f0c; --warn-fg: #ffe9a3;
+  --danger: #ff9a8f; color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -354,3 +361,100 @@ dialog input[type="password"], dialog input[type="url"] { width: 100%; font: inh
   .wiggle rect:nth-child(even) { animation-delay: -.6s; }
 }
 @keyframes wig { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+
+
+/* ================= Notebook identity ================= */
+body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: center top;
+}
+h1, h2, h3, .detail h2, .brand span, .finish-card h3 { font-family: var(--font-hand); font-weight: 600; letter-spacing: 0; }
+h1, h2, .detail h2 { color: var(--accent); }
+
+/* The page: one sheet with a red margin line on the right (inline-start in RTL) */
+main.wrap { position: relative; padding-inline-start: max(56px, env(safe-area-inset-right, 0px)); gap: 8px; }
+main.wrap::before {
+  content: ""; position: absolute; top: 0; bottom: 0;
+  inset-inline-start: 38px; width: 2px; background: var(--margin); opacity: .55;
+}
+@media (max-width: 560px) {
+  main.wrap { padding-inline-start: 44px; }
+  main.wrap::before { inset-inline-start: 28px; }
+}
+
+/* Sections sit on the paper, not in cards */
+.panel, .law-grid li { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 22px 0; }
+main.wrap > section + section, main.wrap > form + section, main.wrap > section + form, main.wrap > div + section {
+  border-top: 1.5px dashed var(--line);
+}
+.panel.suggest { border: 1.5px dashed var(--margin); border-radius: 10px; padding: 14px 16px; }
+.two { gap: 20px; }
+.two .panel { padding: 0; }
+.two .panel h3 { color: var(--accent); }
+
+/* Step numbers handwritten in the margin, like a teacher's red pen */
+.mnum {
+  position: absolute; inset-inline-start: -50px; top: 18px; width: 30px; text-align: center;
+  font-family: var(--font-hand); font-weight: 700; font-size: 28px; line-height: 1; color: var(--margin);
+}
+@media (max-width: 560px) { .mnum { inset-inline-start: -40px; font-size: 22px; } }
+#build, #plan, #finish, #result { position: relative; }
+
+/* Hero: the thesis, written in ink */
+.hero { padding-top: 18px; padding-bottom: 6px; }
+.hero h1 { font-size: clamp(30px, 6.5vw, 46px); line-height: 1.22; font-weight: 700; max-width: 18ch; margin-bottom: 12px; }
+.hero .sub { color: var(--fg); max-width: 52ch; }
+
+/* The one bold element: the identity sentence, highlighted */
+.identity {
+  font-family: var(--font-hand); font-weight: 600; font-size: clamp(22px, 4.6vw, 28px); line-height: 1.5;
+  color: var(--hl-ink); margin: 14px 0 6px;
+}
+.identity span {
+  background: var(--hl); padding: 0 .25em; border-radius: .3em .1em .35em .15em;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+.identity { color: var(--fg); }
+.identity span { color: var(--hl-ink); }
+
+/* Inputs and buttons: pen on paper */
+textarea, .tr-add input, .td-direct input, .pr-sched select, .pr-time input { background: var(--surface); border: 1.5px solid var(--line); }
+textarea:focus, .tr-add input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.btn { border-radius: 8px; border-width: 1.5px; }
+.btn.primary { box-shadow: 2px 2px 0 var(--fg); }
+.btn.primary:active { box-shadow: none; transform: translate(2px, 2px); }
+.chip { background: var(--surface); border: 1.5px solid var(--line); color: var(--fg); }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.seg { background: transparent; border: 1.5px solid var(--line); }
+.seg input:checked + span { background: var(--accent); color: var(--accent-ink); outline: 0; box-shadow: none; }
+
+/* Result: the map drawn in ink, centre marked with the highlighter */
+.tag { background: transparent; color: var(--margin); padding: 0; font-family: var(--font-hand); font-size: 15px; }
+.source, .domains { background: transparent; padding: 0; color: var(--muted); }
+#map .bubble circle { stroke-width: 1.6; }
+#map .bubble.sel circle { stroke-width: 3.2; }
+#map .center circle { fill: var(--hl); stroke: none; }
+#map .center text { fill: var(--hl-ink); }
+#map text { font-family: var(--font-hand); font-weight: 600; }
+#map line { stroke: var(--accent); opacity: .45; stroke-dasharray: 2 4; stroke-linecap: round; }
+.detail { border-top: 1.5px dashed var(--line); }
+.stack { background: var(--surface); border: 1.5px solid var(--line); border-radius: 10px; }
+.stack-line b { color: var(--accent); }
+.habits li { background: var(--surface); border: 1.5px solid var(--border); }
+.habits li .lvl { background: var(--hl); color: var(--hl-ink); }
+
+/* Plan rows, finish cards, guide: light paper slips */
+.plan-row, .finish-card, .guide-cards li { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; }
+.day-chip { background: var(--surface); }
+.pr-due { color: var(--accent); font-family: var(--font-hand); font-size: 14px; }
+.law-grid .n { background: transparent; color: var(--margin); font-family: var(--font-hand); font-size: 26px; width: auto; height: auto; }
+.law-grid li { border-top: 1.5px dashed var(--line); padding: 14px 0; gap: 14px; }
+.law-grid p { color: var(--fg); }
+.step { display: none; }
+.top { background: color-mix(in srgb, var(--bg) 90%, transparent); }
+.badge { background: var(--margin); color: #fff; }
+.foot { padding-inline-start: max(56px, env(safe-area-inset-right, 0px)); }

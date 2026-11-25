@@ -337,7 +337,9 @@
     src.textContent = plan.source === 'ai' ? 'נוצר עם Claude' : 'מהספרייה המקומית';
     $('tag').textContent = example ? 'דוגמה' : 'ההרגלים שלך';
     $('domains').textContent = data.domains.length ? 'תחומים: ' + data.domains.join(' · ') : '';
-    $('identity').textContent = data.identity;
+    var idEl = $('identity'), idSpan = document.createElement('span');
+    idSpan.textContent = data.identity;
+    idEl.textContent = ''; idEl.appendChild(idSpan);
     $('first').textContent = data.first_step;
     $('avoid').textContent = data.avoid;
     selected = 0;
