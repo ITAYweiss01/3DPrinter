@@ -351,5 +351,15 @@ await t('todoist without configuration fails safely', async () => {
   assert.equal((await nav('/todoist/start?return=' + encodeURIComponent(ORIGIN + '/'), env)).status, 500);
 });
 
+await t('features reports what is configured, without secrets', async () => {
+  const get = (e, origin = ORIGIN) => worker.fetch(new Request('https://w.example/features', { headers: { Origin: origin } }), e);
+  assert.deepEqual(await (await get({ ALLOWED_ORIGINS: ORIGIN })).json(), { claude: false, todoist: false, suggest: false });
+  const all = await (await get({ ...tdEnv(), SUGGESTIONS: fakeKV() })).json();
+  assert.deepEqual(all, { claude: true, todoist: true, suggest: true });
+  assert.equal((await get(env, 'https://evil.example')).status, 403);
+  const text = await (await get({ ...tdEnv() })).text();
+  assert.ok(!text.includes('td-secret') && !text.includes('TEST_ONLY'));
+});
+
 console.log(results.map((n) => 'ok - ' + n).join('\n'));
 console.log(`\n${results.length} passed`);

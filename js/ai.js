@@ -9,7 +9,18 @@
   // ניקוי: גרסה קודמת שמרה מפתח API בדפדפן. מוחקים אותו.
   try { localStorage.removeItem('ah-ai'); } catch (e) {}
 
-  function configured() { return /^https:\/\/[^\s/]+/.test(proxy); }
+  // Ask the Worker which features are set up; until it answers, everything is off.
+  var features = { claude: false, todoist: false, suggest: false };
+  var hasProxy = /^https:\/\/[^\s/]+/.test(proxy);
+  var ready = !hasProxy ? Promise.resolve(features) : fetch(proxy + '/features', {
+    mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer'
+  }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (f) {
+    features = { claude: f.claude === true, todoist: f.todoist === true, suggest: f.suggest === true };
+    return features;
+  }, function () { return features; });
+  window.HabitFeatures = { ready: ready, get: function () { return features; }, proxy: hasProxy ? proxy : '' };
+
+  function configured() { return features.claude; }
 
   /* ---------- Turnstile (optional) ---------- */
   var widgetId = null, tsReady = null;
@@ -100,5 +111,5 @@
   }
 
   window.HabitAI = { configured: configured, generate: generate, suggest: suggest, errorCopy: errorCopy };
-  if (configured() && siteKey) loadTurnstile();
+  ready.then(function () { if (configured() && siteKey) loadTurnstile(); });
 })();

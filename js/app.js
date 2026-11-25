@@ -433,7 +433,7 @@
 
   /* ---------- Todoist ---------- */
   // direct mode: no Worker yet -> one-time personal token, sent straight to Todoist
-  (function () {
+  function setupTodoistDirect() {
     var TD = window.HabitTodoist;
     if (!TD || TD.available()) return;
     $('todoistBox').hidden = false;
@@ -458,9 +458,9 @@
     }
     $('tdSend').addEventListener('click', send);
     $('tdDirect').addEventListener('submit', send);
-  })();
+  }
 
-  (function () {
+  function setupTodoistOAuth() {
     var TD = window.HabitTodoist;
     if (!TD || !TD.available()) return;
     $('todoistBox').hidden = false;
@@ -507,7 +507,7 @@
       b.classList.remove('armed'); b.textContent = 'נתק';
       TD.disconnect().then(function () { $('tdStatus').textContent = 'Todoist נותק. המשימות שכבר נוספו נשארות אצלך.'; });
     });
-  })();
+  }
 
   /* ---------- laws ---------- */
   D.laws.forEach(function (l) {
@@ -544,7 +544,7 @@
     var box = $('suggest');
     var ai = window.HabitAI;
     var sent = load(SENT_KEY, []);
-    var canSend = !!(ai && ai.configured() && ai.suggest);
+    var canSend = !!(ai && ai.suggest && window.HabitFeatures && window.HabitFeatures.get().suggest);
     if (!canSend || matchDomains(goal).length || sent.indexOf(goal) !== -1) { box.hidden = true; return; }
     box.hidden = false;
     $('suggestSend').disabled = false;
@@ -637,11 +637,20 @@
   });
 
   /* ---------- AI mode ---------- */
-  (function () {
+  function refreshModeLabel() {
     var on = !!(window.HabitAI && window.HabitAI.configured());
     $('modeLabel').textContent = on ? 'Claude מחובר: כל מטרה מקבלת תוכנית אישית' : 'מצב מקומי: ספרייה של ' + D.domains.length + ' תחומים';
     $('modeDot').classList.toggle('on', on);
-  })();
+  }
+  refreshModeLabel();
+  var FEAT = window.HabitFeatures ? window.HabitFeatures.ready : Promise.resolve({});
+  FEAT.then(function () {
+    refreshModeLabel();
+    setupTodoistDirect();
+    setupTodoistOAuth();
+    var g = $('goal').value.trim();
+    if (g && current && !isExample) offerSuggest(g);
+  });
 
   $('share').addEventListener('click', function () {
     var url = location.href;
