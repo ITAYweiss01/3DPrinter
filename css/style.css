@@ -314,3 +314,9 @@ dialog input[type="password"], dialog input[type="url"] { width: 100%; font: inh
 .td-steps li { margin: 2px 0; }
 .td-steps a { color: var(--p-text); }
 .ver { opacity: .6; }
+
+/* Ideas */
+.ideas { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.ideas-q { margin: 0; font-size: 14px; color: var(--muted); }
+.ideas .row { margin-top: 0; }
+.ideas .link { margin-inline-start: 0; font-size: 14px; }

@@ -3,6 +3,7 @@ const path = require('path');
 global.window = {};
 require(path.join(__dirname, '../js/data.js'));
 require(path.join(__dirname, '../js/data-more.js'));
+require(path.join(__dirname, '../js/ideas.js'));
 const D = window.HABIT_DATA;
 const errs = [];
 const names = {};
@@ -28,6 +29,16 @@ D.domains.forEach((d) => {
   d.keywords.forEach((k) => { if (!k.includes(' ') && [...k].length < 2) errs.push(`${d.id}: keyword too short: ${k}`); });
 });
 
-console.log(`domains ${D.domains.length} | traits ${all.length}`);
+// every idea must lead to at least one domain, using the site's own matcher from js/app.js
+const src = require('fs').readFileSync(path.join(__dirname, '../js/app.js'), 'utf8');
+const matcherSrc = src.slice(src.indexOf('  function clean('), src.indexOf('  function joinHe('));
+const matchDomains = new Function('D', matcherSrc + '; return matchDomains;')(D);
+const ideas = window.HABIT_IDEAS || [];
+ideas.forEach((i) => {
+  if (!i.label || !i.goal) errs.push('idea missing label or goal');
+  else if (!matchDomains(i.goal).length) errs.push(`idea matches no domain: "${i.label}" -> ${i.goal}`);
+});
+
+console.log(`domains ${D.domains.length} | traits ${all.length} | ideas ${ideas.length}`);
 if (errs.length) { console.error(errs.join('\n')); process.exit(1); }
 console.log('all checks passed');
