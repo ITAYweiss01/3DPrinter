@@ -119,11 +119,12 @@
       return;
     }
     Array.prototype.forEach.call(lines, function (l, i) {
-      later(900 + i * 1100, function () { l.classList.add('in'); });
-      later(1400 + i * 1100, function () { l.classList.add('on'); });
+      // each moment gets time to be read before it is ticked
+      later(800 + i * 1900, function () { l.classList.add('in'); });
+      later(1900 + i * 1900, function () { l.classList.add('on'); });
     });
-    later(4600, showB);
-    later(6000, function () { clean(2800); });
+    later(7000, showB);
+    later(8400, function () { clean(2800); });
   }
   function showB() {
     $('sceneA').hidden = true; $('sceneB').hidden = false;
