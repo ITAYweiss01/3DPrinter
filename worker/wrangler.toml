@@ -2,6 +2,11 @@ name = "api"
 main = "worker.js"
 compatibility_date = "2026-11-01"
 
+# The site itself is served from this Worker too: build-site.mjs bundles the site
+# files from the repo root into site-files.js on every deploy.
+[build]
+command = "node build-site.mjs"
+
 # The API key is NOT here. Set it as a secret:
 #   npx wrangler secret put ANTHROPIC_API_KEY
 # Optional bot check (Cloudflare Turnstile):
@@ -9,7 +14,7 @@ compatibility_date = "2026-11-01"
 
 [vars]
 # Required. Comma-separated origins allowed to call the Worker. Empty = everything blocked.
-ALLOWED_ORIGINS = "https://itayweiss01.github.io"
+ALLOWED_ORIGINS = "https://itayweiss01.github.io,https://api.tiny-habits-plan.workers.dev"
 GITHUB_REPO = "ITAYweiss01/3DPrinter"
 GITHUB_BASE = "main"
 
