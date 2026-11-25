@@ -13,6 +13,13 @@ for (const [dom, t] of all) {
   const words = t.name.trim().split(/\s+/);
   if (words.length > 2) errs.push(`${dom}: trait name has more than 2 words: ${t.name}`);
   words.forEach((w) => { if ([...w].length > 8) errs.push(`${dom}: word longer than 8 letters (won't fit the map): ${w}`); });
+  // the feminine name (for "את") follows the same size rules: it has to fit the map too
+  if (!t.name_f) errs.push(`${dom}/${t.name}: missing name_f`);
+  else {
+    const fw = t.name_f.trim().split(/\s+/);
+    if (fw.length > 2) errs.push(`${dom}: name_f has more than 2 words: ${t.name_f}`);
+    fw.forEach((w) => { if ([...w].length > 8) errs.push(`${dom}: name_f word longer than 8 letters: ${w}`); });
+  }
   if (t.habits.length !== 5) errs.push(`${dom}/${t.name}: ${t.habits.length} habits (expected 5)`);
   if (!t.how || !t.stretch || !t.starter || !t.starter.cue || !t.starter.text || !t.starter.task) errs.push(`${dom}/${t.name}: missing field`);
   // habits are tasks: no first-person present ("אני ..."), and no trailing period
@@ -39,6 +46,7 @@ if (new Set(ids).size !== ids.length) errs.push('duplicate domain id');
 D.domains.forEach((d) => {
   if (d.traits.length < 1) errs.push(`${d.id}: no traits`);
   if (!d.identity.startsWith('ש')) errs.push(`${d.id}: identity must start with "ש"`);
+  if (!d.identity_f || !d.identity_f.startsWith('ש')) errs.push(`${d.id}: identity_f missing or not starting with "ש"`);
   d.keywords.forEach((k) => { if (!k.includes(' ') && [...k].length < 2) errs.push(`${d.id}: keyword too short: ${k}`); });
 });
 

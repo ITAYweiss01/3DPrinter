@@ -22,8 +22,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&family=Rubik:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=35">
-  <script src="js/theme.js?v=35"></script>
+  <link rel="stylesheet" href="css/style.css?v=36">
+  <script src="js/theme.js?v=36"></script>
 </head>
 <body>
   <div class="intro" id="intro" role="dialog" aria-modal="true" aria-label="פתיחה" tabindex="-1" hidden>
@@ -71,8 +71,8 @@
 
   <main id="main" class="wrap">
     <section class="hero" data-step="1">
-      <h1>כל הרגל הוא הצבעה בעד האדם שאתה רוצה להיות.</h1>
-      <p class="sub">5 צעדים קצרים: מי אתה רוצה להיות, שני הרגלים קטנים, מתי לעשות אותם, ומשם ל־Todoist ולמסך הבית.</p>
+      <h1 data-f="כל הרגל הוא הצבעה בעד האדם שאת רוצה להיות.">כל הרגל הוא הצבעה בעד האדם שאתה רוצה להיות.</h1>
+      <p class="sub" data-f="5 צעדים קצרים: מי את רוצה להיות, שני הרגלים קטנים, מתי לעשות אותם, ומשם ל־Todoist ולמסך הבית.">5 צעדים קצרים: מי אתה רוצה להיות, שני הרגלים קטנים, מתי לעשות אותם, ומשם ל־Todoist ולמסך הבית.</p>
     </section>
 
     <form class="panel" id="build" autocomplete="off" data-step="1">
@@ -81,20 +81,29 @@
         <span class="mode-dot" id="modeDot" aria-hidden="true"></span>
         <span id="modeLabel">הצעות מתוך 37 תחומים</span>
       </div>
+      <div class="gender" data-q="1" role="radiogroup" aria-label="איך לפנות אליך">
+        <span>איך לפנות אליך?</span>
+        <label><input type="radio" name="gender" value="m" checked><span>אתה</span></label>
+        <label><input type="radio" name="gender" value="f"><span>את</span></label>
+      </div>
       <fieldset class="q">
-        <legend>על מה אתה רוצה לעבוד? <span class="q-hint">עד 3</span></legend>
+        <legend><span data-f="על מה את רוצה לעבוד?">על מה אתה רוצה לעבוד?</span> <span class="q-hint">עד 3</span></legend>
         <div class="row" id="areas" aria-label="תחומים"></div>
         <button type="button" class="link" id="moreAreas" aria-expanded="false">עוד תחומים</button>
       </fieldset>
+      <div class="presets" data-q="1">
+        <p class="presets-q">או להתחיל מתוכנית מוכנה:</p>
+        <div class="row" id="presets" aria-label="תוכניות מוכנות"></div>
+      </div>
 
       <div class="q">
-        <label for="qFuture">מה היית רוצה שיגידו עליך בעוד שנה?</label>
-        <input id="qFuture" maxlength="160" placeholder="למשל: שהוא תמיד מגיע רגוע ומוכן">
+        <label for="qFuture" data-f="מה היית רוצה שיגידו עלייך בעוד שנה?">מה היית רוצה שיגידו עליך בעוד שנה?</label>
+        <input id="qFuture" maxlength="160" placeholder="למשל: שהוא תמיד מגיע רגוע ומוכן" data-fp="למשל: שהיא תמיד מגיעה רגועה ומוכנה">
       </div>
 
       <div class="q">
         <label for="qBlock">מה הכי מפריע לך היום?</label>
-        <input id="qBlock" maxlength="160" placeholder="למשל: אני גולל בטלפון עד מאוחר וקם עייף">
+        <input id="qBlock" maxlength="160" placeholder="למשל: אני גולל בטלפון עד מאוחר וקם עייף" data-fp="למשל: אני גוללת בטלפון עד מאוחר וקמה עייפה">
       </div>
 
       <fieldset class="q">
@@ -108,7 +117,7 @@
       </fieldset>
 
       <details class="free" id="freeBox">
-        <summary>מעדיף לכתוב בחופשיות?</summary>
+        <summary data-f="מעדיפה לכתוב בחופשיות?">מעדיף לכתוב בחופשיות?</summary>
         <label for="goal" class="sr">מי אתה רוצה להיות, או מה אתה רוצה להשיג?</label>
         <textarea id="goal" maxlength="400" placeholder="למשל: אני רוצה להיות בכושר, להצליח בלימודים ולהיות יותר מסודר"></textarea>
         <div class="ideas">
@@ -129,7 +138,7 @@
 
       <div id="captcha" class="captcha"></div>
       <div class="actions">
-        <button type="submit" class="btn primary" id="go">בנה לי הרגלים</button>
+        <button type="submit" class="btn primary" id="go" data-f="בני לי הרגלים">בנה לי הרגלים</button>
         <button type="button" class="btn" id="stop" hidden>עצור</button>
         <button type="button" class="btn ghost" id="share" hidden>שתף קישור</button>
       </div>
@@ -181,7 +190,7 @@
 
     <section id="plan" class="panel plan" data-step="3">
       <span class="mnum" aria-hidden="true">3</span>
-      <h2>מתי תעשה כל הרגל?</h2>
+      <h2 data-f="מתי תעשי כל הרגל?">מתי תעשה כל הרגל?</h2>
       <p class="muted">לכל הרגל: כל יום או ימים מסוימים, ואם תרצה גם שעה. עדיף להתחיל בשניים לכל היותר.</p>
       <p class="plan-limit" id="planLimit" hidden></p>
       <ul id="planList" class="plan-list"></ul>
@@ -243,7 +252,7 @@
 
     <section id="widget" class="panel guide" data-step="5">
       <span class="mnum" aria-hidden="true">5</span>
-      <h2>סדר את הטלפון</h2>
+      <h2 data-f="סדרי את הטלפון">סדר את הטלפון</h2>
       <p class="muted">מכאן ממשיכים ב־Todoist, ישר ממסך הבית. כל הרגל הוא משימה חוזרת: מסמנים עיגול, והיא קופצת לפעם הבאה.</p>
       <ol class="guide-steps phone-steps">
         <li><b>מורידים את Todoist</b> בחינם ושולחים אליו את התוכנית (שלב 4). <a href="https://todoist.com/downloads" target="_blank" rel="noopener noreferrer">לעמוד ההורדה</a></li>
@@ -362,21 +371,21 @@
     </div>
   </main>
 
-  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <button type="button" class="link replay" id="replayIntro">לצפות שוב בפתיחה</button> · <a href="privacy.html">פרטיות</a> <span class="ver">גרסה 35</span></footer>
+  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <button type="button" class="link replay" id="replayIntro">לצפות שוב בפתיחה</button> · <a href="privacy.html">פרטיות</a> <span class="ver">גרסה 36</span></footer>
 
   <div id="printSummary" class="print-summary"></div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 
-  <script src="config.js?v=35"></script>
-  <script src="js/data.js?v=35"></script>
-  <script src="js/ideas.js?v=35"></script>
-  <script src="js/data-extra.js?v=35"></script>
-  <script src="js/ai.js?v=35"></script>
-  <script src="js/todoist.js?v=35"></script>
-  <script src="js/app.js?v=35"></script>
-  <script src="js/steps.js?v=35"></script>
-  <script src="js/screen.js?v=35"></script>
+  <script src="config.js?v=36"></script>
+  <script src="js/data.js?v=36"></script>
+  <script src="js/ideas.js?v=36"></script>
+  <script src="js/data-extra.js?v=36"></script>
+  <script src="js/ai.js?v=36"></script>
+  <script src="js/todoist.js?v=36"></script>
+  <script src="js/app.js?v=36"></script>
+  <script src="js/steps.js?v=36"></script>
+  <script src="js/screen.js?v=36"></script>
 </body>
 </html>
