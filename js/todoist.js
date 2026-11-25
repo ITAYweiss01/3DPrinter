@@ -47,9 +47,13 @@
   }
 
   // "X (cue)" from the 2-minute habit becomes task "X" with note "אחרי ש<cue>"
-  function toTask(text) {
+  function toTask(item) {
+    var text = typeof item === 'string' ? item : item.text;
+    var schedule = item && item.schedule ? item.schedule : { freq: 'daily', days: [], time: '' };
     var mm = /^(.*) \((.+)\)$/.exec(text);
-    return mm ? { content: mm[1], note: 'הרגל של שתי דקות: אחרי ש' + mm[2] + ', ' + mm[1] + '.' } : { content: text, note: '' };
+    return mm
+      ? { content: mm[1], note: 'הרגל של שתי דקות: אחרי ש' + mm[2] + ', ' + mm[1] + '.', schedule: schedule }
+      : { content: text, note: '', schedule: schedule };
   }
 
   window.HabitTodoist = {
@@ -70,9 +74,10 @@
       if (!sid || !available()) return Promise.resolve(false);
       return post('/todoist/status', { sid: sid }).then(function (d) { if (!d.connected) forget(); return !!d.connected; }, function () { return connected(); });
     },
-    add: function (texts) {
+    // items: [{ text, schedule: { freq: 'daily'|'days', days: [0-6], time: 'HH:MM'|'' } }]
+    add: function (items) {
       if (!sid) return Promise.reject(new Error('Todoist לא מחובר.'));
-      return post('/todoist/add', { sid: sid, habits: texts.slice(0, 20).map(toTask) });
+      return post('/todoist/add', { sid: sid, habits: items.slice(0, 20).map(toTask) });
     }
   };
 })();

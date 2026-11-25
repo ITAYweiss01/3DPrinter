@@ -7,7 +7,7 @@
  *    connection id that can do three things: add habits, check status, disconnect.
  *  - OAuth "state" is random, single-use and expires after 10 minutes (CSRF).
  *  - Redirects go back only to an origin on ALLOWED_ORIGINS.
- *  - Scope is data:read_write (needed to find/create the project and avoid duplicates).
+ *  - Scope is data:read_write (needed to find/create the project, avoid duplicates and update schedules).
  *  - Disconnect revokes the token at Todoist and deletes it here.
  *
  * Endpoints (from Todoist's official SDK, @doist/todoist-sdk):
@@ -22,6 +22,27 @@ const API = 'https://api.todoist.com/api/v1/';
 const SCOPE = 'data:read_write';
 const PROJECT_NAME = 'הרגלים';
 const MAX_HABITS = 20;
+
+/* ---------- schedule -> Todoist due_string ----------
+ * Todoist parses English recurring dates ("every day", "every sun, wed at 18:00").
+ * The client sends a structured schedule; the string is built here, so nothing the
+ * browser sends goes into due_string as free text.
+ *   { freq: 'daily' }                          -> "every day"
+ *   { freq: 'days', days: [0, 3] }             -> "every sun, wed"   (0 = Sunday)
+ *   { ..., time: '07:30' }                     -> "... at 07:30"
+ */
+const DAY_EN = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+export function dueString(schedule) {
+  const sc = schedule && typeof schedule === 'object' ? schedule : {};
+  const days = Array.isArray(sc.days)
+    ? [...new Set(sc.days.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort()
+    : [];
+  const time = typeof sc.time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(sc.time) ? sc.time : '';
+  const base = sc.freq === 'days' && days.length && days.length < 7
+    ? 'every ' + days.map((d) => DAY_EN[d]).join(', ')
+    : 'every day';
+  return base + (time ? ' at ' + time : '');
+}
 
 /* ---------- helpers ---------- */
 function randomId(bytes = 32) {
@@ -159,7 +180,8 @@ export async function handleTodoistApi(path, body, env) {
     if (!token) return [401, { error: 'todoist_not_connected' }];
     const habits = Array.isArray(body.habits) ? body.habits.slice(0, MAX_HABITS).map((h) => ({
       content: typeof h.content === 'string' ? h.content.replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, 120) : '',
-      note: typeof h.note === 'string' ? h.note.replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, ' ').trim().slice(0, 300) : ''
+      note: typeof h.note === 'string' ? h.note.replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, ' ').trim().slice(0, 300) : '',
+      due: dueString(h.schedule)
     })).filter((h) => h.content) : [];
     if (!habits.length) return [400, { error: 'bad_input' }];
 
@@ -168,24 +190,33 @@ export async function handleTodoistApi(path, body, env) {
       let project = projects.find((p) => p.name === PROJECT_NAME && !p.is_archived);
       if (!project) project = await td(token, 'projects', { method: 'POST', body: JSON.stringify({ name: PROJECT_NAME, color: 'green' }) });
       const existing = await listAll(token, 'tasks?project_id=' + encodeURIComponent(project.id));
-      const have = new Set(existing.map((t) => t.content));
-      let added = 0, skipped = 0;
+      const byContent = new Map(existing.map((t) => [t.content, t]));
+      let added = 0, updated = 0, skipped = 0;
       for (const h of habits) {
-        if (have.has(h.content)) { skipped++; continue; }
-        await td(token, 'tasks', {
+        const found = byContent.get(h.content);
+        if (found) {
+          // already there: keep the task (and its history), only update the schedule if it changed
+          if (!found.due || found.due.string !== h.due) {
+            await td(token, 'tasks/' + encodeURIComponent(found.id), { method: 'POST', body: JSON.stringify({ due_string: h.due, due_lang: 'en' }) });
+            found.due = { string: h.due };
+            updated++;
+          } else skipped++;
+          continue;
+        }
+        const task = await td(token, 'tasks', {
           method: 'POST',
           body: JSON.stringify({
             content: h.content,
             description: (h.note ? h.note + '\n' : '') + 'נוסף מ־habits',
             project_id: project.id,
-            due_string: 'every day',
+            due_string: h.due,
             due_lang: 'en'
           })
         });
-        have.add(h.content);
+        byContent.set(h.content, { ...task, due: { string: h.due } });
         added++;
       }
-      return [200, { added, skipped, project: PROJECT_NAME }];
+      return [200, { added, updated, skipped, project: PROJECT_NAME }];
     } catch (e) {
       if (e.code === 'todoist_auth') { await env.TODOIST.delete('ts:' + sid); return [401, { error: 'todoist_not_connected' }]; }
       return [502, { error: 'upstream' }];

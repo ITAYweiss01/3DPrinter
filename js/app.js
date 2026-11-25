@@ -32,12 +32,32 @@
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
   }
 
-  /* ---------- dates ---------- */
+  /* ---------- dates & schedules ---------- */
   function key(d) {
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
-  function daysAgo(n) { var d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d; }
-  var DAY_NAMES = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+  var DAY_SHORT = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+  var DAY_LONG = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  // 2-minute habits are stored as "action (cue)"; show them as one sentence
+  function displayHabit(text) {
+    var m = /^(.*) \((.+)\)$/.exec(text);
+    return m ? 'אחרי ש' + m[2] + ', ' + m[1] : text;
+  }
+  function cleanSchedule(sc) {
+    sc = sc || {};
+    var days = Array.isArray(sc.days) ? sc.days.filter(function (d) { return d >= 0 && d <= 6; }) : [];
+    days = days.filter(function (d, i) { return days.indexOf(d) === i; }).sort();
+    var time = /^([01]\d|2[0-3]):[0-5]\d$/.test(sc.time || '') ? sc.time : '';
+    var freq = sc.freq === 'days' && days.length && days.length < 7 ? 'days' : 'daily';
+    return { freq: freq, days: freq === 'days' ? days : [], time: time };
+  }
+  function scheduleText(sc) {
+    sc = cleanSchedule(sc);
+    var t = sc.freq === 'daily' ? 'כל יום'
+      : sc.days.length === 1 ? 'כל יום ' + DAY_LONG[sc.days[0]]
+      : 'בימים ' + sc.days.map(function (d) { return DAY_LONG[d]; }).join(', ');
+    return t + (sc.time ? ' בשעה ' + sc.time : '');
+  }
 
   /* ---------- generator ---------- */
   function clean(s) {
@@ -152,31 +172,25 @@
     };
   }
 
-  /* ---------- tracker state ---------- */
+  /* ---------- plan state ---------- */
+  // stored under the old key so earlier visitors keep their habits
   var T = load('ah-tracker', { habits: [] });
   if (!Array.isArray(T.habits)) T.habits = [];
+  T.habits.forEach(function (h) { h.schedule = cleanSchedule(h.schedule); delete h.done; });
   function saveT() { save('ah-tracker', T); }
   function hasHabit(text) { return T.habits.some(function (h) { return h.text === text; }); }
   function addHabit(text, trait) {
     text = String(text).trim().slice(0, 120);
     if (!text) return false;
     if (hasHabit(text)) { removeHabit(T.habits.filter(function (h) { return h.text === text; })[0].id); return false; }
-    T.habits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, trait: trait || '', created: key(new Date()), done: {} });
-    saveT(); renderTracker(); refreshAddButtons();
-    var TD = window.HabitTodoist;
-    if (TD && TD.available() && TD.connected()) {
-      TD.add([text]).then(function (r) { if (r.added) toast('נוסף גם ל־Todoist'); }, function (e) { toast(e.message); });
-    }
+    if (T.habits.length >= 20) { toast('אפשר עד 20 הרגלים בתוכנית. כדאי להתחיל קטן.'); return false; }
+    T.habits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, trait: trait || '', created: key(new Date()), schedule: cleanSchedule() });
+    saveT(); renderPlan(); refreshAddButtons();
     return true;
   }
   function removeHabit(id) {
     T.habits = T.habits.filter(function (h) { return h.id !== id; });
-    saveT(); renderTracker(); refreshAddButtons();
-  }
-  function streakOf(h) {
-    var n = 0, i = h.done[key(daysAgo(0))] ? 0 : 1;
-    while (h.done[key(daysAgo(i))]) { n++; i++; }
-    return n;
+    saveT(); renderPlan(); refreshAddButtons();
   }
 
   /* ---------- UI: result ---------- */
@@ -244,7 +258,7 @@
     b.type = 'button'; b.className = 'add'; b.dataset.text = text;
     b.addEventListener('click', function () {
       var added = addHabit(text, trait);
-      toast(added ? 'נוסף למעקב' : 'הוסר מהמעקב');
+      toast(added ? 'נוסף לתוכנית' : 'הוסר מהתוכנית');
     });
     return b;
   }
@@ -253,11 +267,11 @@
       var on = hasHabit(b.dataset.text);
       b.classList.toggle('done', on);
       b.textContent = on ? '✓' : '+';
-      b.setAttribute('aria-label', (on ? 'הסר מהמעקב: ' : 'הוסף למעקב: ') + b.dataset.text);
+      b.setAttribute('aria-label', (on ? 'הסר מהתוכנית: ' : 'הוסף לתוכנית: ') + b.dataset.text);
     });
     if (current) {
       var t = current.traits[selected], s = $('addStarter'), on = hasHabit(t.starter.text + ' (' + t.starter.cue + ')');
-      s.textContent = on ? '✓ במעקב' : '+ הוסף למעקב';
+      s.textContent = on ? '✓ בתוכנית' : '+ הוסף לתוכנית';
       s.classList.toggle('done', on);
       var dots = document.querySelectorAll('#map .bubble .dot');
       current.traits.forEach(function (tr, k) { if (dots[k]) dots[k].style.display = traitTracked(tr) ? '' : 'none'; });
@@ -322,103 +336,99 @@
   $('addStarter').addEventListener('click', function () {
     var t = current.traits[selected];
     var added = addHabit(t.starter.text + ' (' + t.starter.cue + ')', t.name);
-    toast(added ? 'נוסף למעקב' : 'הוסר מהמעקב');
+    toast(added ? 'נוסף לתוכנית' : 'הוסר מהתוכנית');
   });
 
-  /* ---------- UI: tracker ---------- */
-  function renderTracker() {
-    var days = [];
-    for (var i = 6; i >= 0; i--) days.push(daysAgo(i));
-    var today = key(daysAgo(0));
-
-    var head = $('trDays');
-    head.textContent = '';
-    var h0 = document.createElement('span'); h0.textContent = 'הרגל'; head.appendChild(h0);
-    days.forEach(function (d) {
-      var s = document.createElement('span');
-      s.textContent = DAY_NAMES[d.getDay()];
-      if (key(d) === today) s.className = 'today';
-      head.appendChild(s);
-    });
-    var hs = document.createElement('span'); hs.textContent = 'רצף'; head.appendChild(hs);
-    head.hidden = T.habits.length === 0;
-
-    var list = $('trList');
+  /* ---------- UI: plan ---------- */
+  function renderPlan() {
+    var list = $('planList');
     list.textContent = '';
-    if (!T.habits.length) {
-      var e = document.createElement('li');
-      e.className = 'empty';
-      e.textContent = 'עוד אין הרגלים במעקב. לחץ + ליד הרגל במפה למעלה.';
-      list.appendChild(e);
-    }
-    var votes = 0;
-    T.habits.forEach(function (h) {
-      votes += Object.keys(h.done).length;
-      var li = document.createElement('li'); li.className = 'tr-row';
-      var nm = document.createElement('div'); nm.className = 'tr-name';
-      var del = document.createElement('button');
-      del.type = 'button'; del.className = 'tr-del'; del.textContent = '×';
-      del.setAttribute('aria-label', 'מחק: ' + h.text);
-      // two-step delete inside the page (no browser confirm dialog)
-      del.addEventListener('click', function () {
-        if (!Object.keys(h.done).length || del.classList.contains('armed')) { removeHabit(h.id); return; }
-        del.classList.add('armed');
-        del.textContent = 'למחוק?';
-        del.setAttribute('aria-label', 'לחץ שוב כדי למחוק את ' + h.text + ' ואת כל הסימונים שלו');
-        setTimeout(function () {
-          if (!del.isConnected) return;
-          del.classList.remove('armed'); del.textContent = '×'; del.setAttribute('aria-label', 'מחק: ' + h.text);
-        }, 3000);
-      });
-      var tx = document.createElement('span'); tx.textContent = h.text;
-      nm.appendChild(del); nm.appendChild(tx);
-      li.appendChild(nm);
-      days.forEach(function (d) {
-        var k = key(d), b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'day' + (h.done[k] ? ' on' : '') + (k === today ? ' today' : '');
-        b.setAttribute('aria-pressed', h.done[k] ? 'true' : 'false');
-        b.setAttribute('aria-label', h.text + ', ' + d.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric' }));
-        b.addEventListener('click', function () {
-          if (h.done[k]) delete h.done[k]; else h.done[k] = 1;
-          saveT(); renderTracker();
-          if (h.done[k] && k === today) toast('עוד הצבעה בשביל מי שאתה רוצה להיות ✓');
-        });
-        li.appendChild(b);
-      });
-      var st = streakOf(h), sp = document.createElement('span');
-      sp.className = 'streak' + (st >= 3 ? ' hot' : '');
-      sp.textContent = st ? st + (st >= 3 ? '🔥' : '') : '–';
-      sp.title = 'רצף ימים';
-      li.appendChild(sp);
-      list.appendChild(li);
-    });
-
-    $('votes').textContent = votes;
     var nc = $('navCount');
     nc.hidden = !T.habits.length;
     nc.textContent = T.habits.length;
-
-    // "never miss twice"
-    var y = key(daysAgo(1)), y2 = key(daysAgo(2)), msg = '';
-    for (var j = 0; j < T.habits.length && !msg; j++) {
-      var hb = T.habits[j];
-      if (hb.done[today] || hb.created >= y) continue;
-      if (!hb.done[y] && !hb.done[y2] && hb.created < y2) msg = 'פספסת יומיים ברצף את "' + hb.text + '". זה לא נורא, רק תחזור היום, גם בגרסה של שתי דקות.';
-      else if (!hb.done[y]) msg = 'פספסת אתמול את "' + hb.text + '". הכלל: לעולם לא מפספסים פעמיים.';
+    if (!T.habits.length) {
+      var e = document.createElement('li');
+      e.className = 'empty';
+      e.textContent = 'עוד אין הרגלים בתוכנית. לחץ + ליד הרגל במפה למעלה, או כתוב הרגל משלך.';
+      list.appendChild(e);
+      return;
     }
-    $('warn').hidden = !msg;
-    $('warn').textContent = msg;
+    T.habits.forEach(function (h) {
+      var sc = h.schedule;
+      var li = document.createElement('li'); li.className = 'plan-row';
+
+      var top = document.createElement('div'); top.className = 'pr-top';
+      var tx = document.createElement('span'); tx.className = 'pr-text'; tx.textContent = displayHabit(h.text);
+      var del = document.createElement('button');
+      del.type = 'button'; del.className = 'tr-del'; del.textContent = '×';
+      del.setAttribute('aria-label', 'הסר מהתוכנית: ' + h.text);
+      del.addEventListener('click', function () { removeHabit(h.id); });
+      top.appendChild(tx); top.appendChild(del);
+      li.appendChild(top);
+
+      var row = document.createElement('div'); row.className = 'pr-sched';
+      var fid = 'freq-' + h.id;
+      var freq = document.createElement('select');
+      freq.id = fid;
+      freq.setAttribute('aria-label', 'תדירות: ' + h.text);
+      [['daily', 'כל יום'], ['days', 'בימים מסוימים']].forEach(function (o) {
+        var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1];
+        if ((sc.freq === 'days' ? 'days' : 'daily') === o[0]) op.selected = true;
+        freq.appendChild(op);
+      });
+      row.appendChild(freq);
+
+      var days = document.createElement('div'); days.className = 'days';
+      days.setAttribute('role', 'group'); days.setAttribute('aria-label', 'ימים: ' + h.text);
+      var picked = sc.freq === 'days' ? sc.days.slice() : [];
+      days.hidden = sc.freq !== 'days';
+      DAY_SHORT.forEach(function (name, d) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'day-chip'; b.textContent = name;
+        b.setAttribute('aria-label', 'יום ' + DAY_LONG[d]);
+        b.setAttribute('aria-pressed', picked.indexOf(d) !== -1 ? 'true' : 'false');
+        b.addEventListener('click', function () {
+          var i = picked.indexOf(d);
+          if (i === -1) picked.push(d); else picked.splice(i, 1);
+          b.setAttribute('aria-pressed', i === -1 ? 'true' : 'false');
+          update();
+        });
+        days.appendChild(b);
+      });
+      row.appendChild(days);
+
+      var tl = document.createElement('label'); tl.className = 'pr-time';
+      tl.appendChild(document.createTextNode('בשעה '));
+      var time = document.createElement('input');
+      time.type = 'time'; time.id = 'time-' + h.id; time.value = sc.time || '';
+      time.setAttribute('aria-label', 'שעה (לא חובה): ' + h.text);
+      tl.appendChild(time);
+      row.appendChild(tl);
+      li.appendChild(row);
+
+      var due = document.createElement('p'); due.className = 'pr-due'; due.textContent = scheduleText(sc);
+      li.appendChild(due);
+
+      function update() {
+        if (freq.value === 'days' && !picked.length && this === freq) picked = [new Date().getDay()];
+        days.hidden = freq.value !== 'days';
+        Array.prototype.forEach.call(days.children, function (b, d) { b.setAttribute('aria-pressed', picked.indexOf(d) !== -1 ? 'true' : 'false'); });
+        h.schedule = cleanSchedule({ freq: freq.value, days: picked, time: time.value });
+        due.textContent = freq.value === 'days' && !picked.length ? 'בחר לפחות יום אחד (עד אז: כל יום)' : scheduleText(h.schedule);
+        saveT();
+      }
+      freq.addEventListener('change', update);
+      time.addEventListener('change', update);
+      list.appendChild(li);
+    });
   }
 
   $('trAdd').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var v = $('newHabit').value.trim();
     if (!v) { $('newHabit').focus(); return; }
-    if (hasHabit(v)) { toast('ההרגל הזה כבר במעקב'); return; }
-    addHabit(v, '');
-    $('newHabit').value = '';
-    toast('נוסף למעקב');
+    if (hasHabit(v)) { toast('ההרגל הזה כבר בתוכנית'); return; }
+    if (addHabit(v, '')) { $('newHabit').value = ''; toast('נוסף לתוכנית'); }
   });
 
   /* ---------- Todoist ---------- */
@@ -426,43 +436,48 @@
     var TD = window.HabitTodoist;
     if (!TD || !TD.available()) return;
     $('todoistBox').hidden = false;
+    var PENDING = 'ah-td-send';
     function paint() {
       var on = TD.connected();
-      $('tdConnect').hidden = on;
-      $('tdSync').hidden = !on;
       $('tdDisconnect').hidden = !on;
-      $('tdTitle').textContent = on ? 'Todoist מחובר' : "ההרגלים שלך בווידג'ט של Todoist";
-      $('tdSub').textContent = on
-        ? 'כל הרגל חדש שתוסיף כאן נכנס אוטומטית לפרויקט "הרגלים" כמשימה יומית. בווידג\'ט של Todoist בחר את הפרויקט "הרגלים".'
-        : 'מחברים פעם אחת, וכל הרגל שמוסיפים כאן נכנס לפרויקט "הרגלים" כמשימה יומית. אפשר לסמן אותו ישר מהמסך הבית.';
+      $('tdSend').textContent = on ? 'שלח ל־Todoist' : 'חבר את Todoist ושלח';
+      $('tdTitle').textContent = on ? 'Todoist מחובר' : 'המשך ב־Todoist';
+    }
+    function send() {
+      if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; location.hash = '#plan'; return; }
+      $('tdSend').disabled = true;
+      $('tdStatus').textContent = 'שולח...';
+      TD.add(T.habits.map(function (h) { return { text: h.text, schedule: h.schedule }; })).then(function (r) {
+        var parts = [];
+        if (r.added) parts.push('נוספו ' + r.added);
+        if (r.updated) parts.push('עודכנו ' + r.updated);
+        $('tdStatus').textContent = (parts.length ? parts.join(', ') + '. ' : 'הכל כבר היה ב־Todoist. ') +
+          'ההרגלים נמצאים בפרויקט "הרגלים". בווידג\'ט של Todoist אפשר לבחור את הפרויקט הזה.';
+        toast('נשלח ל־Todoist');
+      }, function (e) { $('tdStatus').textContent = e.message; }).then(function () { $('tdSend').disabled = false; paint(); });
     }
     TD.onChange(paint);
     paint();
-    var ev = TD.lastEvent();
-    if (ev === 'connected') {
-      toast('Todoist מחובר');
-      if (T.habits.length) TD.add(T.habits.map(function (h) { return h.text; })).then(function (r) {
-        toast('נשלחו ' + r.added + ' הרגלים ל־Todoist');
-      }, function (e) { toast(e.message); });
-    } else if (ev === 'denied') toast('החיבור ל־Todoist בוטל');
-    else if (ev === 'error') toast('החיבור ל־Todoist נכשל. נסה שוב.');
+    var ev = TD.lastEvent(), pending = false;
+    try { pending = sessionStorage.getItem(PENDING) === '1'; sessionStorage.removeItem(PENDING); } catch (e) {}
+    if (ev === 'connected') { toast('Todoist מחובר'); if (pending) send(); }
+    else if (ev === 'denied') $('tdStatus').textContent = 'החיבור ל־Todoist בוטל.';
+    else if (ev === 'error') $('tdStatus').textContent = 'החיבור ל־Todoist נכשל. נסה שוב.';
     else TD.check().then(paint);
-    $('tdConnect').addEventListener('click', function () { TD.connect(); });
-    $('tdSync').addEventListener('click', function () {
-      if (!T.habits.length) { toast('אין עדיין הרגלים במעקב'); return; }
-      $('tdSync').disabled = true;
-      TD.add(T.habits.map(function (h) { return h.text; })).then(function (r) {
-        toast(r.added ? 'נשלחו ' + r.added + ' הרגלים ל־Todoist' : 'כל ההרגלים כבר נמצאים ב־Todoist');
-      }, function (e) { toast(e.message); }).then(function () { $('tdSync').disabled = false; paint(); });
+    $('tdSend').addEventListener('click', function () {
+      if (TD.connected()) { send(); return; }
+      try { sessionStorage.setItem(PENDING, '1'); } catch (e) {}
+      TD.connect();
     });
     $('tdDisconnect').addEventListener('click', function () {
-      if (!$('tdDisconnect').classList.contains('armed')) {
-        $('tdDisconnect').classList.add('armed'); $('tdDisconnect').textContent = 'לנתק? לחץ שוב';
-        setTimeout(function () { $('tdDisconnect').classList.remove('armed'); $('tdDisconnect').textContent = 'נתק'; }, 3000);
+      var b = $('tdDisconnect');
+      if (!b.classList.contains('armed')) {
+        b.classList.add('armed'); b.textContent = 'לנתק? לחץ שוב';
+        setTimeout(function () { b.classList.remove('armed'); b.textContent = 'נתק'; }, 3000);
         return;
       }
-      $('tdDisconnect').classList.remove('armed'); $('tdDisconnect').textContent = 'נתק';
-      TD.disconnect().then(function () { toast('Todoist נותק. המשימות שכבר נוספו נשארות אצלך.'); });
+      b.classList.remove('armed'); b.textContent = 'נתק';
+      TD.disconnect().then(function () { $('tdStatus').textContent = 'Todoist נותק. המשימות שכבר נוספו נשארות אצלך.'; });
     });
   })();
 
@@ -606,17 +621,30 @@
     copyText(url, 'הקישור הועתק');
   });
 
-  /* ---------- copy / print ---------- */
+  /* ---------- summary: text, file, PDF ---------- */
+  function planLines() {
+    return T.habits.map(function (h) { return displayHabit(h.text) + ' · ' + scheduleText(h.schedule); });
+  }
   function toText() {
-    var d = current, out = ['מי אני רוצה להיות', '', d.identity, ''];
+    var d = current, out = ['מי אני רוצה להיות', new Date().toLocaleDateString('he-IL'), '', d.identity, ''];
+    if (isExample) out.splice(2, 0, '(דוגמה)');
+    var goal = $('goal').value.trim();
+    if (goal && !isExample) out.push('המטרה שכתבתי: ' + goal, '');
+    out.push('התכונות שלי');
     d.traits.forEach(function (t) {
-      out.push(t.name + ' — ' + t.how);
-      out.push('• שתי דקות: ' + stackLine(t));
-      t.habits.forEach(function (h) { out.push('• ' + h.text); });
-      out.push('');
+      out.push('• ' + t.name + ': ' + t.how);
+      out.push('  שתי דקות: ' + stackLine(t));
     });
+    out.push('');
+    if (T.habits.length) {
+      out.push('התוכנית שלי');
+      planLines().forEach(function (l) { out.push('☐ ' + l); });
+      out.push('');
+    }
+    out.push('הצעד הראשון: ' + d.first_step.replace(/^היום:\s*/, ''));
     out.push('מה אני לא עושה: ' + d.avoid);
-    out.push(d.first_step);
+    out.push('');
+    out.push('ארבעת החוקים: ' + D.laws.map(function (l) { return l.title; }).join(' · '));
     return out.join('\n');
   }
   function copyText(text, okMsg) {
@@ -625,7 +653,68 @@
     try { navigator.clipboard.writeText(text).then(done, fail); } catch (e) { fail(); }
   }
   $('copy').addEventListener('click', function () { copyText(toText(), 'הועתק'); });
-  $('print').addEventListener('click', function () { window.print(); });
+
+  $('dl').addEventListener('click', function () {
+    var blob = new Blob(['\ufeff' + toText()], { type: 'text/plain;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'my-habits-plan.txt';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  });
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function buildPrintSummary() {
+    var d = current, box = $('printSummary');
+    box.textContent = '';
+    var head = el('header', 'ps-head');
+    head.appendChild(el('p', 'ps-eyebrow', 'מי אני רוצה להיות · ' + new Date().toLocaleDateString('he-IL')));
+    head.appendChild(el('h1', null, d.identity));
+    var goal = $('goal').value.trim();
+    if (goal && !isExample) head.appendChild(el('p', 'ps-goal', 'המטרה שכתבתי: ' + goal));
+    box.appendChild(head);
+
+    box.appendChild(el('h2', null, 'התכונות שלי'));
+    var tr = el('div', 'ps-traits');
+    d.traits.forEach(function (t) {
+      var c = el('div', 'ps-trait');
+      c.appendChild(el('h3', null, t.name));
+      c.appendChild(el('p', null, t.how));
+      c.appendChild(el('p', 'ps-stack', 'שתי דקות: ' + stackLine(t)));
+      tr.appendChild(c);
+    });
+    box.appendChild(tr);
+
+    if (T.habits.length) {
+      box.appendChild(el('h2', null, 'התוכנית שלי'));
+      var ul = el('ul', 'ps-plan');
+      T.habits.forEach(function (h) {
+        var li = el('li');
+        li.appendChild(el('span', 'ps-box'));
+        li.appendChild(el('span', 'ps-habit', displayHabit(h.text)));
+        li.appendChild(el('span', 'ps-when', scheduleText(h.schedule)));
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+    }
+
+    var two = el('div', 'ps-two');
+    var a = el('div'); a.appendChild(el('h2', null, 'הצעד הראשון')); a.appendChild(el('p', null, d.first_step.replace(/^היום:\s*/, '')));
+    var b = el('div'); b.appendChild(el('h2', null, 'מה אני לא עושה')); b.appendChild(el('p', null, d.avoid));
+    two.appendChild(a); two.appendChild(b);
+    box.appendChild(two);
+
+    var laws = el('ol', 'ps-laws');
+    D.laws.forEach(function (l) { var li = el('li'); li.appendChild(el('b', null, l.title + '. ')); li.appendChild(document.createTextNode(l.tip)); laws.appendChild(li); });
+    box.appendChild(el('h2', null, 'ארבעת החוקים'));
+    box.appendChild(laws);
+    box.appendChild(el('p', 'ps-foot', 'בהשראת Atomic Habits מאת ג\'יימס קליר'));
+  }
+  $('pdf').addEventListener('click', function () {
+    buildPrintSummary();
+    window.print();
+  });
+  window.addEventListener('beforeprint', buildPrintSummary);
 
   /* ---------- toast ---------- */
   var tt;
@@ -646,7 +735,7 @@
   });
 
   /* ---------- init ---------- */
-  renderTracker();
+  renderPlan();
   var params = new URLSearchParams(location.search);
   var g = params.get('g'), tm = params.get('t'), last = load('ah-last', null);
   var startGoal = g ? g.slice(0, 600) : (last && last.goal);

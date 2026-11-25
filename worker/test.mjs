@@ -34,7 +34,9 @@ function todoistStub(url, init) {
   if (u.pathname === '/api/v1/projects' && method === 'GET') return j(200, { results: tdState.projects, next_cursor: null });
   if (u.pathname === '/api/v1/projects' && method === 'POST') { const p = { id: 'p1', ...JSON.parse(init.body) }; tdState.projects.push(p); return j(200, p); }
   if (u.pathname === '/api/v1/tasks' && method === 'GET') return j(200, { results: tdState.tasks.filter((t) => t.project_id === u.searchParams.get('project_id')), next_cursor: null });
-  if (u.pathname === '/api/v1/tasks' && method === 'POST') { const t = { id: 't' + tdState.tasks.length, ...JSON.parse(init.body) }; tdState.tasks.push(t); return j(200, t); }
+  if (u.pathname === '/api/v1/tasks' && method === 'POST') { const b = JSON.parse(init.body); const t = { id: 't' + tdState.tasks.length, ...b, due: { string: b.due_string } }; tdState.tasks.push(t); return j(200, t); }
+  const upd = /^\/api\/v1\/tasks\/([^/]+)$/.exec(u.pathname);
+  if (upd && method === 'POST') { const t = tdState.tasks.find((x) => x.id === upd[1]); if (!t) return j(404, {}); const b = JSON.parse(init.body); t.due = { string: b.due_string }; t.updatedVia = (t.updatedVia || 0) + 1; return j(200, t); }
   return j(404, {});
 }
 function githubStub(url, init) {
@@ -294,13 +296,38 @@ await t('todoist add creates the project once and skips duplicates', async () =>
   const sid = (await connect(e)).cb.headers.get('Location').split('#todoist-')[1];
   const add = (habits) => call({ sid, habits }, { path: '/todoist/add', e });
   let r = await add([{ content: 'קורא עמוד אחד', note: 'אחרי שאני נכנס למיטה' }, { content: '5 סקוואטים' }]);
-  assert.equal(r.status, 200); assert.deepEqual(await r.json(), { added: 2, skipped: 0, project: 'הרגלים' });
+  assert.equal(r.status, 200); assert.deepEqual(await r.json(), { added: 2, updated: 0, skipped: 0, project: 'הרגלים' });
   r = await add([{ content: 'קורא עמוד אחד' }, { content: 'כוס מים' }]);
-  assert.deepEqual(await r.json(), { added: 1, skipped: 1, project: 'הרגלים' });
+  assert.deepEqual(await r.json(), { added: 1, updated: 0, skipped: 1, project: 'הרגלים' });
   assert.equal(tdState.projects.length, 1);
-  assert.ok(tdState.tasks.every((t) => t.due_string === 'every day' && t.project_id === 'p1'));
+  assert.ok(tdState.tasks.every((t) => t.due_string === 'every day' && t.due_lang === 'en' && t.project_id === 'p1'));
   assert.ok(tdState.tasks[0].description.includes('אחרי שאני נכנס למיטה'));
   assert.ok(tdState.authSeen.every((a) => a === 'Bearer TD_ACCESS_TOKEN_xyz'));
+});
+await t('todoist schedules: days and time map to due_string, changes update the task', async () => {
+  tdState = { projects: [], tasks: [], tokenCalls: 0, revoked: [], authSeen: [] };
+  const e = tdEnv();
+  const sid = (await connect(e)).cb.headers.get('Location').split('#todoist-')[1];
+  const add = (habits) => call({ sid, habits }, { path: '/todoist/add', e });
+  await add([
+    { content: 'ריצה', schedule: { freq: 'days', days: [3, 0, 3], time: '18:30' } },
+    { content: 'מים', schedule: { freq: 'daily', time: '07:00' } },
+    { content: 'קריאה', schedule: { freq: 'days', days: [0, 1, 2, 3, 4, 5, 6] } }
+  ]);
+  const due = Object.fromEntries(tdState.tasks.map((t) => [t.content, t.due_string]));
+  assert.deepEqual(due, { 'ריצה': 'every sun, wed at 18:30', 'מים': 'every day at 07:00', 'קריאה': 'every day' });
+  const r = await (await add([{ content: 'ריצה', schedule: { freq: 'days', days: [5] } }, { content: 'מים', schedule: { freq: 'daily', time: '07:00' } }])).json();
+  assert.deepEqual(r, { added: 0, updated: 1, skipped: 1, project: 'הרגלים' });
+  assert.equal(tdState.tasks.find((t) => t.content === 'ריצה').due.string, 'every fri');
+  assert.equal(tdState.tasks.length, 3, 'no duplicate tasks');
+});
+await t('todoist schedule input is validated, never passed through as text', async () => {
+  const { dueString } = await import('./todoist.js');
+  assert.equal(dueString({ freq: 'days', days: [9, -1, 'x'] }), 'every day');
+  assert.equal(dueString({ freq: 'daily', time: '25:00' }), 'every day');
+  assert.equal(dueString({ freq: 'daily', time: '07:00 every hour' }), 'every day');
+  assert.equal(dueString({ freq: 'days', days: [6], time: '9:00' }), 'every sat');
+  assert.equal(dueString(null), 'every day');
 });
 await t('todoist calls need a valid connection id and the site origin', async () => {
   const e = tdEnv();
