@@ -12,9 +12,9 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=13">
-  <script src="js/theme.js?v=13"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&family=Rubik:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=14">
+  <script src="js/theme.js?v=14"></script>
 </head>
 <body>
   <a class="skip" href="#main">דלג לתוכן</a>
@@ -39,13 +39,12 @@
 
   <main id="main" class="wrap">
     <section class="hero">
-      <p class="eyebrow">הרגלים מבוססי זהות</p>
       <h1>כל הרגל הוא הצבעה בשביל האדם שאתה רוצה להיות.</h1>
       <p class="sub">כתוב מי אתה רוצה להיות, בחר הרגלים וקבע מתי לעשות אותם. בסוף תקבל קובץ סיכום, וההרגלים יעברו ל־Todoist, שם תמשיך לעקוב אחריהם.</p>
     </section>
 
     <form class="panel" id="build" autocomplete="off">
-      <p class="step">שלב 1 · המטרה</p>
+      <span class="mnum" aria-hidden="true">1</span>
       <div class="mode">
         <span class="mode-dot" id="modeDot" aria-hidden="true"></span>
         <span id="modeLabel">מצב מקומי: ספרייה של 37 תחומים</span>
@@ -118,7 +117,7 @@
     </div>
 
     <section id="plan" class="panel plan">
-      <p class="step">שלב 2 · התוכנית שלי</p>
+      <span class="mnum" aria-hidden="true">2</span>
       <h2>מתי תעשה כל הרגל?</h2>
       <p class="muted">הוסף הרגלים מהמפה (+) או כתוב הרגל משלך, וקבע לכל אחד כל יום או בימים מסוימים, ואם תרצה גם שעה. לפי זה ייווצרו המשימות ב־Todoist.</p>
       <ul id="planList" class="plan-list"></ul>
@@ -130,7 +129,7 @@
     </section>
 
     <section id="finish" class="panel finish">
-      <p class="step">שלב 3 · קח את זה איתך</p>
+      <span class="mnum" aria-hidden="true">3</span>
       <h2>סיכום והמשך ב־Todoist</h2>
       <div class="finish-grid">
         <div class="finish-card">
@@ -170,7 +169,6 @@
     </section>
 
     <section id="widget" class="panel guide">
-      <p class="step">מה עכשיו?</p>
       <h2>ממשיכים ב־Todoist, ישר ממסך הבית</h2>
       <p class="muted">Todoist היא אפליקציית רשימת משימות חינמית לאייפון ולאנדרואיד. כששולחים אליה את התוכנית, כל הרגל נהיה משימה שחוזרת לפי הימים והשעות שקבעת, בפרויקט בשם "הרגלים". מסמנים עיגול, והמשימה קופצת לפעם הבאה. ככה המעקב קורה בטלפון, בלי לחזור לאתר.</p>
 
@@ -275,20 +273,20 @@
     </section>
   </main>
 
-  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 13</span></footer>
+  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 14</span></footer>
 
   <div id="printSummary" class="print-summary"></div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 
-  <script src="config.js?v=13"></script>
-  <script src="js/data.js?v=13"></script>
-  <script src="js/data-more.js?v=13"></script>
-  <script src="js/ideas.js?v=13"></script>
-  <script src="js/data-extra.js?v=13"></script>
-  <script src="js/ai.js?v=13"></script>
-  <script src="js/todoist.js?v=13"></script>
-  <script src="js/app.js?v=13"></script>
+  <script src="config.js?v=14"></script>
+  <script src="js/data.js?v=14"></script>
+  <script src="js/data-more.js?v=14"></script>
+  <script src="js/ideas.js?v=14"></script>
+  <script src="js/data-extra.js?v=14"></script>
+  <script src="js/ai.js?v=14"></script>
+  <script src="js/todoist.js?v=14"></script>
+  <script src="js/app.js?v=14"></script>
 </body>
 </html>
