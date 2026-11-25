@@ -51,11 +51,10 @@
       </div>
       <label for="goal">מה אתה רוצה לעשות או להשיג?</label>
       <textarea id="goal" maxlength="600" placeholder="למשל: אני רוצה להיות בכושר, להצליח בלימודים ולהיות יותר מסודר"></textarea>
-      <div class="row" aria-label="דוגמאות">
-        <button type="button" class="chip" data-ex="אני רוצה להיות בכושר, לאכול טוב ולישון מספיק">כושר ובריאות</button>
-        <button type="button" class="chip" data-ex="אני רוצה להצליח בלימודים, להיות יותר מסודר ופחות בטלפון">לימודים וסדר</button>
-        <button type="button" class="chip" data-ex="אני רוצה ללמוד לנגן, להיות יותר יצירתי ורגוע">יצירה ורוגע</button>
-        <button type="button" class="chip" data-ex="אני רוצה לחסוך כסף, להתקדם בעבודה ולהיות חבר טוב">כסף וקריירה</button>
+      <div class="ideas">
+        <p class="ideas-q">לא בטוח מאיפה להתחיל? אולי משהו מזה מדבר אליך:</p>
+        <div class="row" id="ideas" aria-label="רעיונות"></div>
+        <button type="button" class="link" id="moreIdeas">עוד רעיונות ↻</button>
       </div>
 
       <fieldset class="field">
@@ -174,7 +173,7 @@
     </section>
   </main>
 
-  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 10</span></footer>
+  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 11</span></footer>
 
   <div id="printSummary" class="print-summary"></div>
 
@@ -184,6 +183,7 @@
   <script src="config.js"></script>
   <script src="js/data.js"></script>
   <script src="js/data-more.js"></script>
+  <script src="js/ideas.js"></script>
   <script src="js/data-extra.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/todoist.js"></script>

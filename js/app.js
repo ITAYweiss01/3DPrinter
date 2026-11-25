@@ -647,9 +647,27 @@
       }
     });
   });
-  Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (c) {
-    c.addEventListener('click', function () { $('goal').value = c.getAttribute('data-ex'); $('goal').focus(); });
-  });
+  /* ---------- ideas: 6 random thought-starters, refreshed on demand ---------- */
+  var IDEAS = Array.isArray(window.HABIT_IDEAS) ? window.HABIT_IDEAS.slice() : [];
+  var ideaPos = 0;
+  (function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var x = a[i]; a[i] = a[j]; a[j] = x; } })(IDEAS);
+  function showIdeas() {
+    var box = $('ideas');
+    box.textContent = '';
+    for (var k = 0; k < 6 && IDEAS.length; k++) {
+      var idea = IDEAS[(ideaPos + k) % IDEAS.length];
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip';
+      b.textContent = idea.label;
+      b.addEventListener('click', (function (goal) {
+        return function () { $('goal').value = goal; $('goal').focus(); };
+      })(idea.goal));
+      box.appendChild(b);
+    }
+    ideaPos = (ideaPos + 6) % Math.max(IDEAS.length, 1);
+  }
+  showIdeas();
+  $('moreIdeas').addEventListener('click', showIdeas);
 
   /* ---------- AI mode ---------- */
   function refreshModeLabel() {
