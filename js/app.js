@@ -88,7 +88,8 @@
     return false;
   }
 
-  function matchDomains(goal) {
+  function matchDomains(goal, areas) {
+    areas = areas || [];
     var text = clean(goal);
     var tokens = text.split(/[^\u05d0-\u05eaa-z0-9]+/).filter(Boolean);
     return D.domains
@@ -96,6 +97,7 @@
         var score = 0;
         // a two-word keyword ("אבא טוב") is more specific than a single word, so it counts double
         d.keywords.forEach(function (k) { if (hasKeyword(text, tokens, k)) score += k.indexOf(' ') === -1 ? 1 : 2; });
+        if (areas.indexOf(d.id) !== -1) score += 100; // picked by the person: always first
         return { d: d, score: score, i: i };
       })
       .filter(function (x) { return x.score > 0; })
@@ -120,8 +122,8 @@
 
   function stackLine(t) { return 'אחרי ש' + t.starter.cue + ', ' + t.starter.text + '.'; }
 
-  function generate(goal) {
-    var matched = matchDomains(goal);
+  function generate(goal, areas) {
+    var matched = matchDomains(goal, areas);
     var fallback = matched.length === 0;
     var doms = fallback ? D.domains.filter(function (d) { return ['fitness', 'study', 'focus'].indexOf(d.id) !== -1; }) : matched;
 
@@ -202,12 +204,22 @@
   save('ah-tracker', T);
   function saveT() { save('ah-tracker', T); }
   function hasHabit(text) { return T.habits.some(function (h) { return h.text === text; }); }
+  // start with one or two habits: people who start small keep going
+  var MAX_HABITS = 2;
+  var WHEN_TIME = { morning: '08:00', noon: '13:00', evening: '21:00', any: '' };
+  function defaultTime() {
+    var c = document.querySelector('input[name="when"]:checked');
+    return c ? WHEN_TIME[c.value] || '' : '';
+  }
   function addHabit(text, trait, note) {
     text = String(text).trim().slice(0, 120);
     if (!text) return false;
     if (hasHabit(text)) { removeHabit(T.habits.filter(function (h) { return h.text === text; })[0].id); return false; }
-    if (T.habits.length >= 20) { toast('אפשר עד 20 הרגלים בתוכנית. כדאי להתחיל קטן.'); return false; }
-    T.habits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, trait: trait || '', note: note || '', created: key(new Date()), schedule: cleanSchedule() });
+    if (T.habits.length >= MAX_HABITS) {
+      toast('כבר יש שני הרגלים בתוכנית. כדאי להתחיל בהם, ולהוסיף עוד כשהם יהיו אוטומטיים.');
+      return false;
+    }
+    T.habits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, trait: trait || '', note: note || '', created: key(new Date()), schedule: cleanSchedule({ freq: 'daily', time: defaultTime() }) });
     saveT(); renderPlan(); refreshAddButtons();
     return true;
   }
@@ -316,6 +328,7 @@
     $('dhow').textContent = t.how;
     var sl = $('dstack');
     sl.textContent = '';
+    $('startHere').hidden = i !== 0;
     var b1 = document.createElement('b'); b1.textContent = 'אחרי ש' + t.starter.cue;
     sl.appendChild(b1);
     sl.appendChild(document.createTextNode(', ' + t.starter.text + '.'));
@@ -346,7 +359,7 @@
     src.hidden = example;
     src.textContent = plan.source === 'ai' ? 'נוצר עם Claude' : 'מהספרייה המקומית';
     $('tag').textContent = example ? 'דוגמה' : 'ההרגלים שלך';
-    $('domains').textContent = data.domains.length ? 'תחומים: ' + data.domains.join(' · ') : '';
+    $('domains').textContent = data.domains.length ? 'תחומים: ' + data.domains.join(', ') : '';
     var idEl = $('identity'), idSpan = document.createElement('span');
     idSpan.textContent = data.identity;
     idEl.textContent = ''; idEl.appendChild(idSpan);
@@ -366,6 +379,11 @@
 
   /* ---------- UI: plan ---------- */
   function renderPlan() {
+    var lim = $('planLimit');
+    lim.hidden = T.habits.length < MAX_HABITS;
+    lim.textContent = T.habits.length > MAX_HABITS
+      ? 'יש בתוכנית ' + T.habits.length + ' הרגלים. מומלץ להשאיר שניים, ולהוסיף עוד כשהם יהיו אוטומטיים.'
+      : 'יש לך שני הרגלים. זה בדיוק מספיק להתחלה.';
     var list = $('planList');
     list.textContent = '';
     var nc = $('navCount');
@@ -591,17 +609,29 @@
     };
   }
 
+  // the link carries the answers, so a shared plan opens the same way
+  function shareUrl() {
+    var a = answers(), q = new URLSearchParams();
+    if (a.areas.length) q.set('a', a.areas.join(','));
+    if (a.future) q.set('f', a.future);
+    if (a.block) q.set('b', a.block);
+    if (a.free) q.set('g', a.free);
+    if (a.when !== 'any') q.set('w', a.when);
+    q.set('t', minutes());
+    try { history.replaceState(null, '', '?' + q.toString()); } catch (e) {}
+  }
+
   function show(goal, plan, scroll) {
     render(plan, false);
     offerSuggest(goal);
-    save('ah-last', { goal: goal, m: minutes() });
-    try { history.replaceState(null, '', '?g=' + encodeURIComponent(goal) + '&t=' + minutes()); } catch (e) {}
+    save('ah-last', { goal: goal, m: minutes(), answers: answers() });
+    shareUrl();
     $('share').hidden = false;
     if (scroll) $('result').scrollIntoView({ block: 'start' });
   }
 
   function buildLocal(goal, scroll, note) {
-    var plan = generate(goal);
+    var plan = generate(goal, chosen);
     show(goal, plan, scroll);
     status(note || (plan.fallback ? 'לא מצאנו תחום שמתאים בדיוק למה שכתבת, אז הנה תוכנית כללית. אפשר לנסח במילים אחרות, או לשלוח לנו בקשה לתחום חדש.' : ''), !!note);
   }
@@ -643,8 +673,12 @@
   $('build').addEventListener('submit', function (ev) {
     ev.preventDefault();
     if (ctl) return;
-    var goal = $('goal').value.trim();
-    if (!goal) { status('כתוב קודם מה אתה רוצה לעשות או להיות.', true); $('goal').focus(); return; }
+    var goal = composeGoal();
+    if (!chosen.length && !$('qFuture').value.trim() && !$('qBlock').value.trim() && !$('goal').value.trim()) {
+      status('בחר תחום אחד לפחות, או ענה על אחת השאלות.', true);
+      var first = document.querySelector('#areas .chip'); if (first) first.focus();
+      return;
+    }
     build(goal, true);
   });
   $('stop').addEventListener('click', function () { if (ctl) ctl.abort(); });
@@ -655,11 +689,70 @@
       render(currentPlan, isExample);
       if (keep < current.traits.length) select(keep);
       if (!isExample) {
-        save('ah-last', { goal: $('goal').value.trim(), m: minutes() });
-        try { history.replaceState(null, '', '?g=' + encodeURIComponent($('goal').value.trim()) + '&t=' + minutes()); } catch (e) {}
+        var last0 = load('ah-last', {});
+        save('ah-last', { goal: last0.goal || composeGoal(), m: minutes(), answers: answers() });
+        shareUrl();
       }
     });
   });
+  /* ---------- questionnaire: areas, a year from now, what gets in the way, time of day ---------- */
+  var POPULAR = ['fitness', 'sleep', 'focus', 'study', 'money', 'nutrition', 'mind', 'social', 'order', 'career', 'reading', 'relationship'];
+  var MAX_AREAS = 3;
+  var chosen = [];
+  var showAllAreas = false;
+  function renderAreas() {
+    var box = $('areas');
+    box.textContent = '';
+    var ids = showAllAreas ? POPULAR.concat(D.domains.map(function (d) { return d.id; }).filter(function (id) { return POPULAR.indexOf(id) === -1; })) : POPULAR;
+    ids.forEach(function (id) {
+      var d = D.domains.filter(function (x) { return x.id === id; })[0];
+      if (!d) return;
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip area'; b.textContent = d.name;
+      b.setAttribute('aria-pressed', chosen.indexOf(id) !== -1 ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        var k = chosen.indexOf(id);
+        if (k !== -1) chosen.splice(k, 1);
+        else if (chosen.length >= MAX_AREAS) { toast('אפשר לבחור עד 3 תחומים. פחות זה יותר.'); return; }
+        else chosen.push(id);
+        status('');
+        renderAreas();
+      });
+      box.appendChild(b);
+    });
+    $('moreAreas').textContent = showAllAreas ? 'פחות תחומים' : 'עוד תחומים';
+    $('moreAreas').setAttribute('aria-expanded', showAllAreas ? 'true' : 'false');
+  }
+  $('moreAreas').addEventListener('click', function () { showAllAreas = !showAllAreas; renderAreas(); });
+
+  // one text for the matcher and for Claude: the answers plus anything written freely
+  function composeGoal() {
+    var parts = [];
+    var names = chosen.map(function (id) { return D.domains.filter(function (d) { return d.id === id; })[0].name; });
+    if (names.length) parts.push('אני רוצה לעבוד על: ' + names.join(', ') + '.');
+    var f = $('qFuture').value.trim(), b = $('qBlock').value.trim(), free = $('goal').value.trim();
+    if (f) parts.push('בעוד שנה הייתי רוצה שיגידו עליי: ' + f + '.');
+    if (b) parts.push('מה שהכי מפריע לי היום: ' + b + '.');
+    var w = document.querySelector('input[name="when"]:checked');
+    if (w && w.value !== 'any') parts.push('הכי קל לי להוסיף משהו ' + { morning: 'בבוקר', noon: 'בצהריים', evening: 'בערב' }[w.value] + '.');
+    if (free) parts.push(free);
+    return parts.join(' ').slice(0, 600);
+  }
+  function answers() {
+    var w = document.querySelector('input[name="when"]:checked');
+    return { areas: chosen.slice(), future: $('qFuture').value.trim(), block: $('qBlock').value.trim(), free: $('goal').value.trim(), when: w ? w.value : 'any' };
+  }
+  function restoreAnswers(a) {
+    if (!a) return;
+    chosen = (a.areas || []).filter(function (id) { return D.domains.some(function (d) { return d.id === id; }); }).slice(0, MAX_AREAS);
+    if (chosen.some(function (id) { return POPULAR.indexOf(id) === -1; })) showAllAreas = true;
+    $('qFuture').value = a.future || ''; $('qBlock').value = a.block || ''; $('goal').value = a.free || '';
+    var r = document.querySelector('input[name="when"][value="' + (a.when || 'any') + '"]'); if (r) r.checked = true;
+    if (a.free) $('freeBox').open = true;
+    renderAreas();
+  }
+  renderAreas();
+
   /* ---------- ideas: 6 random thought-starters, refreshed on demand ---------- */
   var IDEAS = Array.isArray(window.HABIT_IDEAS) ? window.HABIT_IDEAS.slice() : [];
   var ideaPos = 0;
@@ -673,7 +766,7 @@
       b.type = 'button'; b.className = 'chip';
       b.textContent = idea.label;
       b.addEventListener('click', (function (goal) {
-        return function () { $('goal').value = goal; $('goal').focus(); };
+        return function () { $('freeBox').open = true; $('goal').value = goal; $('goal').focus(); };
       })(idea.goal));
       box.appendChild(b);
     }
@@ -830,10 +923,16 @@
   /* ---------- init ---------- */
   renderPlan();
   var params = new URLSearchParams(location.search);
-  var g = params.get('g'), tm = params.get('t'), last = load('ah-last', null);
-  var startGoal = g ? g.slice(0, 600) : (last && last.goal);
+  var tm = params.get('t'), last = load('ah-last', null);
+  var fromLink = params.has('a') || params.has('f') || params.has('b') || params.has('g');
+  if (fromLink) {
+    restoreAnswers({ areas: (params.get('a') || '').split(',').filter(Boolean), future: (params.get('f') || '').slice(0, 160),
+      block: (params.get('b') || '').slice(0, 160), free: (params.get('g') || '').slice(0, 400), when: params.get('w') || 'any' });
+  } else if (last && last.answers) restoreAnswers(last.answers);
+  else if (last && last.goal) restoreAnswers({ free: last.goal });
+  var startGoal = (fromLink || (last && last.goal)) ? composeGoal() : '';
   if (startGoal) {
-    $('goal').value = startGoal; setMinutes(g ? (tm || 30) : last.m);
+    setMinutes(fromLink ? (tm || 30) : (last && last.m) || 30);
     // never spend an API call on page load: use the cached Claude plan or the local library
     var cached = cacheGet(startGoal);
     if (cached) show(startGoal, cached, false); else buildLocal(startGoal, false);
