@@ -603,3 +603,12 @@ details.more[open] summary { margin-bottom: 8px; }
 .q-nav #qBack { order: 3; }
 .q-nav #qNext { order: 4; }
 .ps-next { margin: 6px 0 0; font-size: 13px; }
+
+/* Privacy page */
+.privacy { display: flex; flex-direction: column; gap: 14px; padding-block: 28px 32px; max-width: 760px; }
+.privacy .panel h2 { margin-bottom: 6px; }
+.privacy .panel p { margin: 6px 0 0; }
+.privacy ul { margin: 6px 0 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 4px; }
+.privacy a { color: var(--accent); }
+.back-home { margin-inline-start: auto; text-decoration: none; }
+.foot a { color: var(--accent); }
