@@ -160,13 +160,14 @@ export default {
   async fetch(req, env) {
     // The public site (same files as on GitHub Pages), with security headers.
     if (req.method === 'GET' || req.method === 'HEAD') {
-      const p = new URL(req.url).pathname;
+      const p = new URL(req.url).pathname; // query strings like ?v=13 are only for cache-busting
       const file = SITE[p === '/' ? '/index.html' : p];
       if (file) {
         return new Response(req.method === 'HEAD' ? null : file.body, {
           headers: {
             'Content-Type': file.type,
-            'Cache-Control': p === '/sw.js' || p.endsWith('.html') || p === '/' ? 'no-cache' : 'public, max-age=300',
+            // always revalidate: the site is small, and stale CSS with new HTML breaks the layout
+            'Cache-Control': 'no-cache',
             'X-Content-Type-Options': 'nosniff',
             'Referrer-Policy': 'no-referrer',
             'X-Frame-Options': 'DENY',
