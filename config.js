@@ -6,5 +6,5 @@
 window.HABITS_CONFIG = {
   proxyUrl: /\.workers\.dev$/.test(location.hostname) ? location.origin : 'https://api.tiny-habits-plan.workers.dev',
   turnstileSiteKey: '',
-  donateUrl: ''
+  donateUrl: 'https://www.bitpay.co.il/app/me/D1F250C5-F5C2-5BA0-845C-2CC3243F15615375'
 };
