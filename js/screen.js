@@ -1,5 +1,5 @@
 /* אנימציית הפתיחה: "רוצה לבנות הרגלים, ומשהו תמיד נתקע?", ואז מסך בית עמוס שמתנקה
-   למסך אחד עם וידג'ט ההרגלים ו־8 אפליקציות. מוצגת פעם אחת, אפשר לדלג ולצפות שוב. */
+   למסך אחד עם וידג'ט ההרגלים ו־12 אפליקציות. מוצגת פעם אחת, אפשר לדלג ולצפות שוב. */
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var intro = $('intro');
@@ -12,10 +12,10 @@
   // [icon, colour, badge, keep]: generic apps, no brands. 'dock' stays, a number is its slot under the widget
   var APPS = [
     ['📰', 'c1', 3], ['🖼️', 'c2', 0, 0], ['🎮', 'c3', 2], ['🗺️', 'c4', 0, 1],
-    ['📺', 'c5', 0], ['🛒', 'c6', 0], ['📅', 'c7', 0, 2], ['💳', 'c8', 0],
-    ['🎬', 'c1', 0], ['🍔', 'c3', 1], ['🎵', 'c2', 0, 3], ['🌤️', 'c4', 0],
-    ['📱', 'c5', 2], ['🎧', 'c6', 0], ['🧮', 'c7', 0], ['🏃', 'c8', 0],
-    ['📸', 'c1', 1], ['🛍️', 'c2', 0], ['🎲', 'c3', 0], ['⏰', 'c4', 0],
+    ['📺', 'c5', 0], ['🛒', 'c6', 0], ['📅', 'c7', 0, 2], ['💳', 'c8', 0, 4],
+    ['🎬', 'c1', 0], ['🍔', 'c3', 1], ['🎵', 'c2', 0, 3], ['🌤️', 'c4', 0, 5],
+    ['📱', 'c5', 2], ['🎧', 'c6', 0], ['🧮', 'c7', 0], ['🏃', 'c8', 0, 6],
+    ['📸', 'c1', 1], ['🛍️', 'c2', 0], ['🎲', 'c3', 0], ['⏰', 'c4', 0, 7],
     ['📞', 'c5', 0, 'dock'], ['💬', 'c6', 0, 'dock'], ['🌐', 'c7', 0, 'dock'], ['📷', 'c8', 0, 'dock']
   ];
   var COL = function (c) { return 6 + c * 23.5; };
@@ -27,7 +27,8 @@
     stage.appendChild(el);
     var dock = a[3] === 'dock';
     var from = dock ? { x: COL(i - 20), y: 81 } : { x: COL(i % 4), y: 4 + Math.floor(i / 4) * 11.5 };
-    var to = dock ? from : typeof a[3] === 'number' ? { x: COL(a[3]), y: 47 } : null;
+    // 8 apps in two rows under the widget, 4 more in the dock: 12 in all
+    var to = dock ? from : typeof a[3] === 'number' ? { x: COL(a[3] % 4), y: 45 + Math.floor(a[3] / 4) * 11.5 } : null;
     return { el: el, from: from, to: to, badge: el.querySelector('.ph-badge') };
   });
   var gone = apps.filter(function (a) { return !a.to; });
@@ -83,7 +84,7 @@
     widget.style.transform = 'translateY(' + (1 - w) * 12 + '%) scale(' + (.94 + .06 * w) + ')';
     lib.style.opacity = seg(p, .85, 1);
     for (var i = 1; i < dots.length; i++) dots[i].style.opacity = 1 - seg(p, .3, .6);
-    $('introCap').textContent = p < .5 ? '4 מסכים. 24 אפליקציות. 9 התראות.' : 'מסך אחד. וידג\'ט אחד. 8 אפליקציות.';
+    $('introCap').textContent = p < .5 ? '4 מסכים. 24 אפליקציות. 9 התראות.' : 'מסך אחד. וידג\'ט אחד. 12 אפליקציות.';
   }
 
   /* ---------- the sequence ---------- */
