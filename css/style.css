@@ -216,7 +216,7 @@ textarea:focus, .tr-add input:focus { border-color: var(--accent); outline: none
 .foot { font-size: 13px; color: var(--muted); padding-block: 0 calc(32px + env(safe-area-inset-bottom, 0px)); }
 
 .toast {
-  position: fixed; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); inset-inline: 0; margin: 0 auto; width: max-content; max-width: calc(100% - 32px);
+  position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); inset-inline: 0; margin: 0 auto; width: max-content; max-width: calc(100% - 32px);
   background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: 10px; font-size: 14px; z-index: 30;
   animation: pop .2s ease both;
 }
@@ -516,7 +516,7 @@ mark { background: linear-gradient(var(--hl), var(--hl)) no-repeat right 70% / 1
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .intro-cap { margin: 0; font-weight: 700; font-family: var(--font-hand); font-size: 18px; min-height: 1.5em; }
 .intro-go { min-width: 200px; }
-.foot .replay { font-size: 13px; }
+.foot .replay { font-size: 13px; color: var(--accent); }
 
 /* Home screen demo */
 .phone {
@@ -577,8 +577,9 @@ mark { background: linear-gradient(var(--hl), var(--hl)) no-repeat right 70% / 1
 .stepper button[aria-current="step"] { color: var(--fg); font-weight: 700; }
 .stepper button[aria-current="step"] .n { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 @media (max-width: 520px) { .stepper button:not([aria-current]) .l { display: none; } .stepper li + li::before { width: 8px; } }
-.stepper .badge { margin-inline-start: 2px; }
-.step-nav { display: flex; justify-content: space-between; gap: 10px; position: sticky; bottom: 0; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--bg) 30%); z-index: 5; }
+.stepper .badge { display: none !important; }
+/* in the flow at the end of each step: nothing floats over the content */
+.step-nav { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0 0; }
 .step-nav .btn.primary { margin-inline-start: auto; }
 .link.inline { margin: 0; font-size: inherit; }
 details.more { margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 12px; }
