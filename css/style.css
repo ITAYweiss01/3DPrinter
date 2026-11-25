@@ -612,3 +612,8 @@ details.more[open] summary { margin-bottom: 8px; }
 .privacy a { color: var(--accent); }
 .back-home { margin-inline-start: auto; text-decoration: none; }
 .foot a { color: var(--accent); }
+
+/* Buy me a coffee */
+.tip { margin-top: 16px; padding: 14px; border: 1.5px dashed var(--p-stroke); border-radius: 12px; background: color-mix(in srgb, var(--hl) 14%, transparent); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.tip p { margin: 0; flex: 1 1 220px; font-size: 15px; }
+.tip .btn { text-decoration: none; }

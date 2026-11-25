@@ -155,8 +155,8 @@ const SITE_CSP = "default-src 'self'; script-src 'self' https://challenges.cloud
   "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.workers.dev https://api.todoist.com; " +
   "frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests";
 
-/* events a visit can report: visit, questions 2-5, steps 2-5, plan built, sent to Todoist, calendar file, summary file */
-const HIT_EVENTS = /^(v|q[2-5]|s[2-5]|built|td|ics|file)$/;
+/* events a visit can report: visit, questions 2-5, steps 2-5, plan built, sent to Todoist, calendar file, summary file, coffee link */
+const HIT_EVENTS = /^(v|q[2-5]|s[2-5]|built|td|ics|file|tip)$/;
 
 /* ---------- handler ---------- */
 export default {
