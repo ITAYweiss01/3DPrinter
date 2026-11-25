@@ -320,3 +320,37 @@ dialog input[type="password"], dialog input[type="url"] { width: 100%; font: inh
 .ideas-q { margin: 0; font-size: 14px; color: var(--muted); }
 .ideas .row { margin-top: 0; }
 .ideas .link { margin-inline-start: 0; font-size: 14px; }
+
+/* Widget guide */
+.guide h2 { margin-bottom: 4px; }
+.guide > .muted { max-width: 62ch; }
+.guide a { color: var(--p-text); }
+.guide-steps { margin: 12px 0 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 4px; }
+.guide-tabs { display: inline-grid; grid-template-columns: 1fr 1fr; margin-top: 14px; min-width: 220px; }
+.guide-tabs button { font: inherit; font-size: 14px; border: 0; background: none; color: var(--muted); padding: 7px 12px; border-radius: 7px; cursor: pointer; }
+.guide-tabs button[aria-selected="true"] { background: var(--surface); color: var(--fg); outline: 1px solid var(--border); }
+.guide-cards { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.guide-cards li { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--bg); display: flex; flex-direction: column; gap: 8px; }
+.guide-cards p { margin: 0; font-size: 14px; line-height: 1.5; }
+.ill { width: 100%; max-width: 140px; height: auto; margin: 0 auto; display: block; }
+.ill-phone { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+.ill-app rect, .ill-app circle { fill: var(--p-fill); stroke: var(--p-stroke); stroke-width: .8; }
+.ill-pill, .ill-search, .ill-menu { fill: var(--bg); stroke: var(--border); stroke-width: 1; }
+.ill-widget { fill: var(--bg); stroke: var(--border); stroke-width: 1.2; }
+.ill-row { fill: transparent; }
+.hl { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.ill-btn { fill: var(--accent); }
+.ill-lines circle { fill: none; stroke: var(--muted); stroke-width: 1.2; }
+.ill-lines rect { fill: var(--line); }
+.ill-lines circle.done { fill: var(--accent); stroke: var(--accent); }
+.ill-lines rect.done { opacity: .4; }
+.ill-dots circle { fill: var(--line); } .ill-dots circle.on { fill: var(--fg); }
+.ill-touch { fill: var(--accent); opacity: .25; } .ill-touch-c { fill: var(--accent); }
+.ill-arrow { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ill-t { font-family: var(--font); font-size: 6px; text-anchor: middle; fill: var(--fg); font-weight: 500; }
+.ill-t.big { font-size: 7.5px; } .ill-t.dim { fill: var(--muted); } .ill-t.light { fill: var(--accent-ink); font-weight: 700; } .ill-t.acc { fill: var(--accent); font-weight: 700; }
+@media (prefers-reduced-motion: no-preference) {
+  .wiggle rect { animation: wig 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .wiggle rect:nth-child(even) { animation-delay: -.6s; }
+}
+@keyframes wig { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }

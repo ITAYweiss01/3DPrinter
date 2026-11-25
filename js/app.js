@@ -786,6 +786,16 @@
   });
   window.addEventListener('beforeprint', buildPrintSummary);
 
+  /* ---------- widget guide tabs (iPhone / Android) ---------- */
+  (function () {
+    var tabs = [[$('tabIos'), $('guideIos')], [$('tabAndroid'), $('guideAndroid')]];
+    if (/Android/i.test(navigator.userAgent)) choose(1);
+    tabs.forEach(function (t, i) { t[0].addEventListener('click', function () { choose(i); }); });
+    function choose(i) {
+      tabs.forEach(function (t, k) { t[0].setAttribute('aria-selected', k === i ? 'true' : 'false'); t[1].hidden = k !== i; });
+    }
+  })();
+
   /* ---------- toast ---------- */
   var tt;
   function toast(msg) {
