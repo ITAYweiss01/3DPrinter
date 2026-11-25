@@ -137,3 +137,6 @@ dist
 *.pem
 *.key
 secrets.*
+
+# Generated bundle of the site served by the Worker
+worker/site-files.js

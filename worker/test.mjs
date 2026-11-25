@@ -361,5 +361,31 @@ await t('features reports what is configured, without secrets', async () => {
   assert.ok(!text.includes('td-secret') && !text.includes('TEST_ONLY'));
 });
 
+await t('same-origin requests from the site served by the Worker are allowed', async () => {
+  const self = 'https://api.example.workers.dev';
+  const e = { ...env, ALLOWED_ORIGINS: ORIGIN + ',' + self };
+  const get = (headers) => worker.fetch(new Request(self + '/features', { headers }), e);
+  assert.equal((await get({ 'Sec-Fetch-Site': 'same-origin' })).status, 200, 'same-origin GET without Origin');
+  assert.equal((await get({ 'Sec-Fetch-Site': 'cross-site' })).status, 403);
+  assert.equal((await get({})).status, 403, 'no Origin and no Sec-Fetch-Site');
+  // same-origin but the Worker's own origin is not on the allowlist -> still blocked
+  assert.equal((await worker.fetch(new Request(self + '/features', { headers: { 'Sec-Fetch-Site': 'same-origin' } }), env)).status, 403);
+});
+
+await t('serves the site with security headers', async () => {
+  const r = await worker.fetch(new Request('https://w.example/'), env);
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get('Content-Type'), /text\/html/);
+  assert.match(await r.text(), /<html lang="he"/);
+  assert.match(r.headers.get('Content-Security-Policy'), /frame-ancestors 'none'/);
+  assert.equal(r.headers.get('X-Frame-Options'), 'DENY');
+  const js = await worker.fetch(new Request('https://w.example/js/app.js'), env);
+  assert.match(js.headers.get('Content-Type'), /javascript/);
+  assert.equal((await worker.fetch(new Request('https://w.example/admin.html'), env)).headers.get('X-Robots-Tag'), 'noindex, nofollow');
+  // source files of the Worker itself are not served
+  assert.equal((await worker.fetch(new Request('https://w.example/worker.js'), env)).status, 403);
+  assert.equal((await worker.fetch(new Request('https://w.example/wrangler.toml'), env)).status, 403);
+});
+
 console.log(results.map((n) => 'ok - ' + n).join('\n'));
 console.log(`\n${results.length} passed`);

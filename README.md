@@ -1,6 +1,6 @@
 # habits · מי אני רוצה להיות
 
-**האתר:** https://itayweiss01.github.io/habits/
+**האתר:** https://api.tiny-habits-plan.workers.dev/ (גיבוי ב־GitHub Pages: https://itayweiss01.github.io/3DPrinter/)
 
 אתר סטטי לבניית הרגלים מבוססי זהות, בהשראת הספר **Atomic Habits** מאת ג'יימס קליר.
 
@@ -21,7 +21,7 @@
 
 ## השרת (Cloudflare Worker)
 
-ה־Worker פרוס ב־`https://api.tiny-habits-plan.workers.dev` (שם גנרי, בלי פרטים אישיים).
+ה־Worker פרוס ב־`https://api.tiny-habits-plan.workers.dev` (שם גנרי, בלי פרטים אישיים), ומגיש גם את האתר עצמו: `build-site.mjs` אורז את קבצי האתר לתוך ה־Worker בכל פריסה, עם כותרות אבטחה (CSP, `X-Frame-Options`, HSTS).
 האתר שואל אותו ב־`GET /features` אילו יכולות מוגדרות (`claude`, `todoist`, `suggest`), ומפעיל רק אותן. כך אפשר להגדיר כל חלק בנפרד בלי שכפתורים יישברו.
 
 פריסה מחדש: `cd worker && npx wrangler deploy`.

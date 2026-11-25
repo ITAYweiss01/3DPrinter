@@ -17,6 +17,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { handleSuggest, handleAdmin, isAdmin } from './suggestions.js';
 import { handleTodoistNav, handleTodoistApi } from './todoist.js';
+import SITE from './site-files.js';
 
 const MODEL = 'claude-opus-5-5';
 const MAX_BODY = 4000;      // bytes
@@ -150,9 +151,34 @@ function errorCode(e) {
   return ['upstream', 502];
 }
 
+const SITE_CSP = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' https://fonts.googleapis.com; " +
+  "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.workers.dev https://api.todoist.com; " +
+  "frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests";
+
 /* ---------- handler ---------- */
 export default {
   async fetch(req, env) {
+    // The public site (same files as on GitHub Pages), with security headers.
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      const p = new URL(req.url).pathname;
+      const file = SITE[p === '/' ? '/index.html' : p];
+      if (file) {
+        return new Response(req.method === 'HEAD' ? null : file.body, {
+          headers: {
+            'Content-Type': file.type,
+            'Cache-Control': p === '/sw.js' || p.endsWith('.html') || p === '/' ? 'no-cache' : 'public, max-age=300',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'no-referrer',
+            'X-Frame-Options': 'DENY',
+            'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+            'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+            'Content-Security-Policy': SITE_CSP,
+            ...(p === '/admin.html' ? { 'X-Robots-Tag': 'noindex, nofollow' } : {})
+          }
+        });
+      }
+    }
+
     // Todoist sign-in is a page navigation (no Origin header). It is protected by a
     // single-use state and an allowlisted return address instead.
     const navUrl = new URL(req.url);
@@ -163,7 +189,12 @@ export default {
       catch (e) { console.error('todoist nav error', e && e.code); return new Response('Something went wrong. Go back to the site and try again.', { status: 500 }); }
     }
 
-    const origin = req.headers.get('Origin') || '';
+    // The site is also served from this Worker. Browsers leave out Origin on some
+    // same-origin requests (e.g. GET fetch); Sec-Fetch-Site is set by the browser and
+    // can't be changed by page scripts, so treat a same-origin request as this origin.
+    const selfOrigin = navUrl.origin;
+    const sameSite = req.headers.get('Sec-Fetch-Site') === 'same-origin';
+    const origin = req.headers.get('Origin') || (sameSite ? selfOrigin : '');
     const origins = allowedOrigins(env);
     // Fail closed: no allowlist configured means nobody is allowed.
     if (!origins.length || !origins.includes(origin)) {
