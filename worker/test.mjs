@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import worker from './worker.js';
 
 const ORIGIN = 'https://itayweiss01.github.io';
-const env = { ANTHROPIC_API_KEY: 'sk-ant-test-secret-DO-NOT-LEAK', ALLOWED_ORIGINS: ORIGIN };
+const env = { ANTHROPIC_API_KEY: 'TEST_ONLY_fake_key_value_123', ALLOWED_ORIGINS: ORIGIN };
 const plan = { unsafe: false, message: '', identity: 'אני אדם ש...', domains: [], traits: [], avoid: '', first_step: '' };
 
 let upstream = [];
@@ -12,7 +12,7 @@ globalThis.fetch = async (url, init) => {
   const req = new Request(url, init);
   upstream.push({ url: req.url, headers: Object.fromEntries(req.headers), body: init.body ? JSON.parse(init.body) : null });
   if (upstreamStatus !== 200) {
-    return new Response(JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key sk-ant-test-secret' } }), { status: upstreamStatus, headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key TEST_ONLY_fake_key_value_123' } }), { status: upstreamStatus, headers: { 'content-type': 'application/json' } });
   }
   return new Response(JSON.stringify({ id: 'msg_1', type: 'message', role: 'assistant', model: 'claude-opus-5-5', stop_reason: 'end_turn', stop_details: null, usage: { input_tokens: 1, output_tokens: 1 }, content: [{ type: 'text', text: JSON.stringify(plan) }] }), { status: 200, headers: { 'content-type': 'application/json' } });
 };
@@ -91,7 +91,7 @@ await t('upstream errors never leak the key or details', async () => {
   const r = await call(ok);
   const text = await r.text();
   assert.equal(r.status, 502);
-  assert.ok(!text.includes('sk-ant'), 'key leaked'); assert.ok(!text.includes('x-api-key'));
+  assert.ok(!text.includes('TEST_ONLY_fake_key'), 'key leaked'); assert.ok(!text.includes('x-api-key'));
   assert.deepEqual(JSON.parse(text), { error: 'upstream' });
 });
 await t('missing key returns not_configured without calling upstream', async () => {
