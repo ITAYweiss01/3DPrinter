@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&family=Rubik:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=21">
-  <script src="js/theme.js?v=21"></script>
+  <link rel="stylesheet" href="css/style.css?v=22">
+  <script src="js/theme.js?v=22"></script>
 </head>
 <body>
   <a class="skip" href="#main">דלג לתוכן</a>
@@ -30,6 +30,7 @@
         <a href="#plan">2. תוכנית <span class="badge" id="navCount" hidden></span></a>
         <a href="#finish">3. סיכום ו־Todoist</a>
         <a href="#widget">וידג'ט</a>
+        <a href="#screen">מסך הבית</a>
       </nav>
       <button class="icon-btn" id="theme" type="button" aria-label="החלף מצב תצוגה" title="החלף מצב תצוגה">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
@@ -38,9 +39,24 @@
   </header>
 
   <main id="main" class="wrap">
-    <section class="hero">
-      <h1>כל הרגל הוא הצבעה בעד האדם שאתה רוצה להיות.</h1>
-      <p class="sub">כתוב מי אתה רוצה להיות, בחר הרגלים וקבע מתי לעשות אותם. בסוף תקבל קובץ סיכום, וההרגלים יעברו ל־Todoist, שם תמשיך לעקוב אחריהם.</p>
+    <section class="hero" id="stuck">
+      <h1>רוצה לבנות הרגלים, ומשהו תמיד נתקע?</h1>
+      <p class="stuck-q">נשמע מוכר? סמן מה מתאים לך:</p>
+      <ul class="stuck-list">
+        <li><button type="button" class="stuck-item" aria-pressed="false">פתחתי את הטלפון לבדוק דבר אחד, ומצאתי את עצמי גולל 20 דקות</button></li>
+        <li><button type="button" class="stuck-item" aria-pressed="false">התחלתי הרגל חדש, ונטשתי אחרי שבוע</button></li>
+        <li><button type="button" class="stuck-item" aria-pressed="false">אני יודע בדיוק מה צריך לעשות, ופשוט לא עושה</button></li>
+      </ul>
+      <div class="stuck-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="stuck-punch" id="stuckPunch" aria-live="polite" hidden>
+        <p class="punch-big">זה לא כוח רצון. <mark>זה עיצוב.</mark></p>
+        <p class="sub">הרגל לא נבנה ממוטיבציה. הוא נבנה מצעד קטן ברגע קבוע ביום, ומסביבה שמזכירה לך אותו. כאן תבחר מי אתה רוצה להיות, תקבל שני הרגלים קטנים, ותסדר את הטלפון כך שיעבוד בשבילך ולא נגדך.</p>
+      </div>
+      <p class="sub" id="stuckSub">כל הרגל הוא הצבעה בעד האדם שאתה רוצה להיות. בוחרים מי רוצים להיות, מקבלים שני הרגלים קטנים, וממשיכים איתם ב־Todoist ישר ממסך הבית.</p>
+      <div class="actions hero-actions">
+        <a class="btn primary" href="#build">בוא נתחיל</a>
+        <a class="btn ghost" href="#screen">איך מסדרים את הטלפון</a>
+      </div>
     </section>
 
     <form class="panel" id="build" autocomplete="off">
@@ -298,25 +314,59 @@
       <p class="note">השמות המדויקים של הכפתורים יכולים להשתנות קצת לפי גרסת הטלפון והשפה שלו.</p>
     </section>
 
+    <section id="screen" class="panel screen-sec">
+      <h2>מסך אחד. וידג'ט אחד. 8 אפליקציות.</h2>
+      <p class="muted">הטריק שהכי עובד: מסך בית אחד בלבד. למעלה הווידג'ט הגדול של Todoist עם ההרגלים שלך, מתחתיו 8 אפליקציות שאתה באמת פותח כל יום, וכל השאר מחוץ לעין. צריך משהו אחר? מחפשים אותו. כל פעם שתפתח את הטלפון, הדבר הראשון שתראה הוא מי שאתה רוצה להיות, ולא 30 התראות אדומות.</p>
+
+      <div class="screen-demo">
+        <div class="phone" id="phone" aria-hidden="true">
+          <div class="ph-notch"></div>
+          <div class="ph-stage" id="phStage"></div>
+          <div class="ph-dots" id="phDots"><i class="on"></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="screen-ctrl">
+          <p class="screen-state" id="screenState" aria-live="polite">לפני: 4 מסכים, 24 אפליקציות, 9 התראות.</p>
+          <label class="scrub">
+            <span>לפני</span>
+            <input type="range" id="scrub" min="0" max="100" value="0" aria-label="לפני ואחרי: גרור כדי לנקות את המסך">
+            <span>אחרי</span>
+          </label>
+          <button type="button" class="btn primary" id="cleanBtn">נקה לי את המסך</button>
+          <p class="note" id="screenNote">בווידג'ט יופיעו ההרגלים שבחרת בתוכנית.</p>
+        </div>
+      </div>
+
+      <h3 class="screen-h">ככה עושים את זה באייפון</h3>
+      <ol class="guide-steps screen-steps">
+        <li><b>בוחרים 8 אפליקציות</b> שבאמת פותחים כל יום. 4 מהן הולכות לשורה התחתונה (ה־Dock).</li>
+        <li><b>מורידים את כל השאר מהמסך:</b> לחיצה ארוכה על אפליקציה, "הסר אפליקציה", ואז <b>"הסר ממסך הבית"</b>. האפליקציה לא נמחקת. היא עוברת לספריית האפליקציות.</li>
+        <li><b>מסתירים את שאר המסכים:</b> לחיצה ארוכה על מקום ריק, לוחצים על הנקודות שמעל ה־Dock, ומורידים את הסימון מכל מסך חוץ מהראשון.</li>
+        <li><b>שמים את הווידג'ט הגדול של Todoist</b> בראש המסך, ובוחרים בו את הפרויקט "הרגלים" (המדריך למעלה).</li>
+        <li><b>צריך אפליקציה אחרת?</b> מחליקים למטה באמצע המסך וכותבים את השם שלה. זה לוקח שנייה, ובדרך לא נתקעים בגלילה.</li>
+      </ol>
+      <p class="note">באנדרואיד: לחיצה ארוכה על אפליקציה ו"הסר" (לא "הסר התקנה"). האפליקציה נשארת במגירת האפליקציות.</p>
+    </section>
+
     <section id="laws" class="laws">
       <h2>ארבעת החוקים של שינוי הרגלים</h2>
       <ol class="law-grid" id="lawGrid"></ol>
     </section>
   </main>
 
-  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 21</span></footer>
+  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 22</span></footer>
 
   <div id="printSummary" class="print-summary"></div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 
-  <script src="config.js?v=21"></script>
-  <script src="js/data.js?v=21"></script>
-  <script src="js/ideas.js?v=21"></script>
-  <script src="js/data-extra.js?v=21"></script>
-  <script src="js/ai.js?v=21"></script>
-  <script src="js/todoist.js?v=21"></script>
-  <script src="js/app.js?v=21"></script>
+  <script src="config.js?v=22"></script>
+  <script src="js/data.js?v=22"></script>
+  <script src="js/ideas.js?v=22"></script>
+  <script src="js/data-extra.js?v=22"></script>
+  <script src="js/ai.js?v=22"></script>
+  <script src="js/todoist.js?v=22"></script>
+  <script src="js/app.js?v=22"></script>
+  <script src="js/screen.js?v=22"></script>
 </body>
 </html>
