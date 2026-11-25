@@ -94,7 +94,8 @@
     return D.domains
       .map(function (d, i) {
         var score = 0;
-        d.keywords.forEach(function (k) { if (hasKeyword(text, tokens, k)) score++; });
+        // a two-word keyword ("אבא טוב") is more specific than a single word, so it counts double
+        d.keywords.forEach(function (k) { if (hasKeyword(text, tokens, k)) score += k.indexOf(' ') === -1 ? 1 : 2; });
         return { d: d, score: score, i: i };
       })
       .filter(function (x) { return x.score > 0; })
@@ -110,7 +111,8 @@
   function habitsFor(t, minutes) {
     var list = [];
     if (typeof t.habits[0] === 'object') t = Object.assign({}, t, { habits: t.habits.map(function (h) { return h.text; }) });
-    var n = minutes >= 60 ? 3 : minutes >= 30 ? 2 : 1;
+    // 10 min: 2 habits, 30 min: 3, an hour or more: all of them (up to 5) + the stretch habit
+    var n = minutes >= 60 ? 5 : minutes >= 30 ? 3 : 2;
     t.habits.slice(0, n).forEach(function (h) { list.push({ text: h }); });
     if (minutes >= 60 && t.stretch) list.push({ text: t.stretch, lvl: 'העמקה' });
     return list;
@@ -130,8 +132,11 @@
       traits.push(Object.assign({ domain: dom ? dom.name : 'כללי' }, t));
     }
     // first trait of every domain, then second traits
-    doms.forEach(function (d) { push(d.traits[0], d); });
-    doms.forEach(function (d) { if (traits.length < 5) push(d.traits[1], d); });
+    // round-robin: the first trait of every matched domain, then the second, and so on
+    var target = doms.length > 2 ? 6 : 5;
+    for (var r = 0; r < 3; r++) {
+      doms.forEach(function (d) { if (traits.length < target && d.traits[r]) push(d.traits[r], d); });
+    }
     D.general.forEach(function (t) { if (traits.length < 5) push(t, null); });
 
     var top = doms.slice(0, 3);
