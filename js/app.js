@@ -38,10 +38,10 @@
   }
   var DAY_SHORT = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
   var DAY_LONG = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-  // 2-minute habits keep their trigger in h.cue; show them as one sentence
-  function displayHabit(h) {
-    return h.cue ? 'אחרי ש' + h.cue + ', ' + h.text : h.text;
-  }
+  // a plan item is a short task ("5 סקוואטים אחרי צחצוח שיניים בבוקר"); a 2-minute habit
+  // also keeps the full sentence in h.note ("אחרי שאני מצחצח שיניים בבוקר, אני עושה 5 סקוואטים.")
+  function displayHabit(h) { return h.text; }
+  function starterTask(t) { return t.starter.task || t.starter.text; }
   function cleanSchedule(sc) {
     sc = sc || {};
     var days = Array.isArray(sc.days) ? sc.days.filter(function (d) { return d >= 0 && d <= 6; }) : [];
@@ -182,22 +182,32 @@
   if (!Array.isArray(T.habits)) T.habits = [];
   // older versions stored a 2-minute habit as "action (cue)"; split it only when the
   // part in parentheses is a known cue, so habits like "25 דקות לימוד (פומודורו)" stay intact
-  var KNOWN_CUES = {};
-  D.domains.concat([{ traits: D.general }]).forEach(function (d) { d.traits.forEach(function (t) { KNOWN_CUES[t.starter.cue] = 1; }); });
+  // older versions stored a 2-minute habit as "text (cue)" or with h.cue; turn it into
+  // the short task + full sentence, using the library to find the matching starter
+  var STARTERS = {};
+  D.domains.concat([{ traits: D.general }]).forEach(function (d) {
+    d.traits.forEach(function (t) { STARTERS[t.starter.cue] = t; STARTERS[t.starter.text] = t; });
+  });
   T.habits.forEach(function (h) {
     h.schedule = cleanSchedule(h.schedule); delete h.done;
     var m = !h.cue && /^(.*) \((.+)\)$/.exec(h.text);
-    if (m && KNOWN_CUES[m[2]]) { h.text = m[1]; h.cue = m[2]; }
+    if (m && STARTERS[m[2]]) { h.text = m[1]; h.cue = m[2]; }
+    if (h.cue) {
+      var t = STARTERS[h.text] || STARTERS[h.cue];
+      h.note = 'אחרי ש' + h.cue + ', ' + h.text + '.';
+      if (t && t.starter.task) h.text = t.starter.task;
+      delete h.cue;
+    }
   });
   save('ah-tracker', T);
   function saveT() { save('ah-tracker', T); }
   function hasHabit(text) { return T.habits.some(function (h) { return h.text === text; }); }
-  function addHabit(text, trait, cue) {
+  function addHabit(text, trait, note) {
     text = String(text).trim().slice(0, 120);
     if (!text) return false;
     if (hasHabit(text)) { removeHabit(T.habits.filter(function (h) { return h.text === text; })[0].id); return false; }
     if (T.habits.length >= 20) { toast('אפשר עד 20 הרגלים בתוכנית. כדאי להתחיל קטן.'); return false; }
-    T.habits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, trait: trait || '', cue: cue || '', created: key(new Date()), schedule: cleanSchedule() });
+    T.habits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, trait: trait || '', note: note || '', created: key(new Date()), schedule: cleanSchedule() });
     saveT(); renderPlan(); refreshAddButtons();
     return true;
   }
@@ -230,8 +240,8 @@
     svg.appendChild(lines);
     var center = sv('g', { 'class': 'center' });
     center.appendChild(sv('circle', { cx: cx, cy: cy, r: 48 }));
-    var ct = sv('text', { x: cx, y: cy - 8 }); ct.textContent = 'האני';
-    var ct2 = sv('text', { x: cx, y: cy + 9 }); ct2.textContent = 'הרצוי';
+    var ct = sv('text', { x: cx, y: cy - 8 }); ct.textContent = 'מי שאני';
+    var ct2 = sv('text', { x: cx, y: cy + 9 }); ct2.textContent = 'רוצה להיות';
     center.appendChild(ct); center.appendChild(ct2);
     svg.appendChild(center);
     svg.appendChild(bubbles);
@@ -283,7 +293,7 @@
       b.setAttribute('aria-label', (on ? 'הסר מהתוכנית: ' : 'הוסף לתוכנית: ') + b.dataset.text);
     });
     if (current) {
-      var t = current.traits[selected], s = $('addStarter'), on = hasHabit(t.starter.text);
+      var t = current.traits[selected], s = $('addStarter'), on = hasHabit(starterTask(t));
       s.textContent = on ? '✓ בתוכנית' : '+ הוסף לתוכנית';
       s.classList.toggle('done', on);
       var dots = document.querySelectorAll('#map .bubble .dot');
@@ -350,7 +360,7 @@
 
   $('addStarter').addEventListener('click', function () {
     var t = current.traits[selected];
-    var added = addHabit(t.starter.text, t.name, t.starter.cue);
+    var added = addHabit(starterTask(t), t.name, stackLine(t));
     toast(added ? 'נוסף לתוכנית' : 'הוסר מהתוכנית');
   });
 
@@ -380,6 +390,7 @@
       del.addEventListener('click', function () { removeHabit(h.id); });
       top.appendChild(tx); top.appendChild(del);
       li.appendChild(top);
+      if (h.note) { var nt = document.createElement('p'); nt.className = 'pr-note'; nt.textContent = h.note; li.appendChild(nt); }
 
       var row = document.createElement('div'); row.className = 'pr-sched';
       var fid = 'freq-' + h.id;
@@ -461,7 +472,7 @@
       if (!token.trim()) { $('tdStatus').textContent = 'הדבק את הטוקן של Todoist.'; $('tdToken').focus(); return; }
       $('tdSend').disabled = true;
       $('tdStatus').textContent = 'שולח...';
-      TD.directAdd(token, T.habits.map(function (h) { return { text: h.text, cue: h.cue, schedule: h.schedule }; })).then(function (r) {
+      TD.directAdd(token, T.habits.map(function (h) { return { text: h.text, note: h.note, schedule: h.schedule }; })).then(function (r) {
         $('tdToken').value = '';
         var parts = [];
         if (r.added) parts.push('נוספו ' + r.added);
@@ -492,7 +503,7 @@
       if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; location.hash = '#plan'; return; }
       $('tdSend').disabled = true;
       $('tdStatus').textContent = 'שולח...';
-      TD.add(T.habits.map(function (h) { return { text: h.text, cue: h.cue, schedule: h.schedule }; })).then(function (r) {
+      TD.add(T.habits.map(function (h) { return { text: h.text, note: h.note, schedule: h.schedule }; })).then(function (r) {
         var parts = [];
         if (r.added) parts.push('נוספו ' + r.added);
         if (r.updated) parts.push('עודכנו ' + r.updated);
@@ -572,7 +583,7 @@
       ai.suggest(goal).then(function () {
         sent.push(goal); save(SENT_KEY, sent.slice(-50));
         $('suggestSend').hidden = true;
-        $('suggestMsg').textContent = 'תודה! הבקשה נשלחה לאישור. אם הנושא יאושר, הוא יופיע באתר.';
+        $('suggestMsg').textContent = 'תודה! הבקשה נשלחה. אם התחום יאושר, הוא יופיע באתר.';
       }, function (e) {
         $('suggestSend').disabled = false;
         $('suggestMsg').textContent = ai.errorCopy(e) || 'לא הצלחנו לשלוח. נסה שוב.';
@@ -592,7 +603,7 @@
   function buildLocal(goal, scroll, note) {
     var plan = generate(goal);
     show(goal, plan, scroll);
-    status(note || (plan.fallback ? 'לא זיהיתי תחום מוכר, אז הנה תוכנית כללית. חבר את Claude בהגדרות כדי לקבל תוכנית שמתאימה בדיוק למה שכתבת.' : ''), !!note);
+    status(note || (plan.fallback ? 'לא מצאנו תחום שמתאים בדיוק למה שכתבת, אז הנה תוכנית כללית. אפשר לנסח במילים אחרות, או לשלוח לנו בקשה לתחום חדש.' : ''), !!note);
   }
 
   var ctl = null;
@@ -674,7 +685,7 @@
   /* ---------- AI mode ---------- */
   function refreshModeLabel() {
     var on = !!(window.HabitAI && window.HabitAI.configured());
-    $('modeLabel').textContent = on ? 'Claude מחובר: כל מטרה מקבלת תוכנית אישית' : 'מצב מקומי: ספרייה של ' + D.domains.length + ' תחומים';
+    $('modeLabel').textContent = on ? 'Claude כותב תוכנית אישית לכל מטרה' : 'הצעות מתוך ' + D.domains.length + ' תחומים';
     $('modeDot').classList.toggle('on', on);
   }
   refreshModeLabel();

@@ -6,15 +6,15 @@
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>מי אני רוצה להיות</title>
-  <meta name="description" content="כתוב מי אתה רוצה להיות, קבל מפת תכונות והרגלים קטנים לפי Atomic Habits, ועקוב אחריהם כל יום.">
+  <meta name="description" content="כתוב מי אתה רוצה להיות, קבל הרגלים קטנים לפי Atomic Habits, קבע מתי לעשות אותם וקח אותם ל־Todoist.">
   <meta name="theme-color" content="#0f6e56">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Hebrew:wght@400;600;700&family=Rubik:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=14">
-  <script src="js/theme.js?v=14"></script>
+  <link rel="stylesheet" href="css/style.css?v=15">
+  <script src="js/theme.js?v=15"></script>
 </head>
 <body>
   <a class="skip" href="#main">דלג לתוכן</a>
@@ -29,7 +29,7 @@
         <a href="#build">1. מטרה</a>
         <a href="#plan">2. תוכנית <span class="badge" id="navCount" hidden></span></a>
         <a href="#finish">3. סיכום ו־Todoist</a>
-        <a href="#widget">ווידג'ט</a>
+        <a href="#widget">וידג'ט</a>
       </nav>
       <button class="icon-btn" id="theme" type="button" aria-label="החלף מצב תצוגה" title="החלף מצב תצוגה">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
@@ -39,7 +39,7 @@
 
   <main id="main" class="wrap">
     <section class="hero">
-      <h1>כל הרגל הוא הצבעה בשביל האדם שאתה רוצה להיות.</h1>
+      <h1>כל הרגל הוא הצבעה בעד האדם שאתה רוצה להיות.</h1>
       <p class="sub">כתוב מי אתה רוצה להיות, בחר הרגלים וקבע מתי לעשות אותם. בסוף תקבל קובץ סיכום, וההרגלים יעברו ל־Todoist, שם תמשיך לעקוב אחריהם.</p>
     </section>
 
@@ -47,9 +47,9 @@
       <span class="mnum" aria-hidden="true">1</span>
       <div class="mode">
         <span class="mode-dot" id="modeDot" aria-hidden="true"></span>
-        <span id="modeLabel">מצב מקומי: ספרייה של 37 תחומים</span>
+        <span id="modeLabel">הצעות מתוך 37 תחומים</span>
       </div>
-      <label for="goal">מה אתה רוצה לעשות או להשיג?</label>
+      <label for="goal">מי אתה רוצה להיות, או מה אתה רוצה להשיג?</label>
       <textarea id="goal" maxlength="600" placeholder="למשל: אני רוצה להיות בכושר, להצליח בלימודים ולהיות יותר מסודר"></textarea>
       <div class="ideas">
         <p class="ideas-q">לא בטוח מאיפה להתחיל? אולי משהו מזה מדבר אליך:</p>
@@ -97,16 +97,16 @@
           <button type="button" class="btn small" id="addStarter">+ הוסף לתוכנית</button>
         </div>
 
-        <p class="k">הרגלים לאמץ</p>
+        <p class="k">עוד הרגלים לבחור מהם</p>
         <ul id="dhabits" class="habits"></ul>
       </div>
     </section>
 
     <div class="panel suggest" id="suggest" hidden>
-      <h3>עוד אין לנו נושא שמור למטרה הזאת</h3>
-      <p class="muted">רוצה שנוסיף אותו? הבקשה תישמר בלי שם ובלי כתובת IP, ותתווסף לאתר רק אחרי אישור.</p>
+      <h3>עוד אין לנו תחום שמתאים למטרה הזאת</h3>
+      <p class="muted">רוצה שנוסיף? הבקשה נשמרת בלי שם ובלי כתובת IP, ותחום חדש עולה לאתר רק אחרי בדיקה.</p>
       <div class="actions">
-        <button type="button" class="btn small" id="suggestSend">שלח בקשה לנושא חדש</button>
+        <button type="button" class="btn small" id="suggestSend">שלח בקשה לתחום חדש</button>
       </div>
       <p class="note" id="suggestMsg" role="status" aria-live="polite"></p>
     </div>
@@ -119,7 +119,7 @@
     <section id="plan" class="panel plan">
       <span class="mnum" aria-hidden="true">2</span>
       <h2>מתי תעשה כל הרגל?</h2>
-      <p class="muted">הוסף הרגלים מהמפה (+) או כתוב הרגל משלך, וקבע לכל אחד כל יום או בימים מסוימים, ואם תרצה גם שעה. לפי זה ייווצרו המשימות ב־Todoist.</p>
+      <p class="muted">הוסף הרגלים מהמפה (+) או כתוב הרגל משלך. לכל הרגל בחר כל יום או ימים מסוימים, ואם תרצה גם שעה. לפי זה ייווצרו המשימות ב־Todoist.</p>
       <ul id="planList" class="plan-list"></ul>
       <form class="tr-add" id="trAdd" autocomplete="off">
         <label for="newHabit" class="sr">הרגל חדש</label>
@@ -134,7 +134,7 @@
       <div class="finish-grid">
         <div class="finish-card">
           <h3>קובץ הסיכום</h3>
-          <p class="muted">מי אתה רוצה להיות, התכונות, ההרגלים והזמנים שקבעת. לשמור, להדפיס או לתלות על המקרר.</p>
+          <p class="muted">מי אתה רוצה להיות, התכונות, ההרגלים והזמנים שקבעת. אפשר לשמור, להדפיס או לתלות על המקרר.</p>
           <div class="row-actions">
             <button type="button" class="btn small" id="pdf">שמור כ־PDF</button>
             <button type="button" class="btn small ghost" id="dl">הורד קובץ טקסט</button>
@@ -146,7 +146,7 @@
             <svg viewBox="0 0 24 24" aria-hidden="true" class="td-icon"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7.5 12.5l3 3 6-7"/></svg>
             <span id="tdTitle">המשך ב־Todoist</span>
           </h3>
-          <p class="muted" id="tdSub">ההרגלים ייכנסו לפרויקט "הרגלים" כמשימות חוזרות, לפי הימים והשעות שקבעת. משם ממשיכים, כולל הווידג'ט במסך הבית.</p>
+          <p class="muted" id="tdSub">ההרגלים ייכנסו לפרויקט "הרגלים" כמשימות חוזרות, לפי הימים והשעות שקבעת. משם ממשיכים לעקוב, גם מהווידג'ט במסך הבית.</p>
           <form class="td-direct" id="tdDirect" autocomplete="off" hidden>
             <label for="tdToken">טוקן ה־API של Todoist</label>
             <input id="tdToken" type="password" dir="ltr" spellcheck="false" autocomplete="off" placeholder="40 תווים">
@@ -160,7 +160,7 @@
             <button type="button" class="btn small primary" id="tdSend">שלח ל־Todoist</button>
             <button type="button" class="btn small ghost" id="tdDisconnect" hidden>נתק</button>
           </div>
-          <p class="note"><a href="#widget">אין לך Todoist? ואיך מוסיפים ווידג'ט למסך הבית?</a></p>
+          <p class="note"><a href="#widget">אין לך Todoist? איך מוסיפים וידג'ט למסך הבית?</a></p>
           <p class="note" id="tdStatus" role="status" aria-live="polite"></p>
         </div>
       </div>
@@ -175,7 +175,7 @@
       <ol class="guide-steps guide-intro">
         <li><b>מורידים את Todoist</b> מה־App Store או מ־Google Play ונרשמים בחינם. <a href="https://todoist.com/downloads" target="_blank" rel="noopener noreferrer">לעמוד ההורדה</a></li>
         <li><b>שולחים את התוכנית</b> בשלב 3 למעלה: "חבר את Todoist ושלח".</li>
-        <li><b>מוסיפים ווידג'ט</b> למסך הבית, כדי לראות ולסמן את ההרגלים בלי לפתוח את האפליקציה:</li>
+        <li><b>מוסיפים וידג'ט</b> למסך הבית, כדי לראות ולסמן את ההרגלים בלי לפתוח את האפליקציה:</li>
       </ol>
 
       <div class="seg guide-tabs" role="tablist" aria-label="סוג טלפון">
@@ -235,11 +235,11 @@
             <rect class="ill-phone" x="6" y="4" width="108" height="192" rx="14"/>
             <g class="ill-app"><circle cx="31" cy="40" r="11"/><circle cx="60" cy="40" r="11"/><circle cx="89" cy="40" r="11"/></g>
             <rect class="ill-menu" x="30" y="118" width="64" height="44" rx="8"/>
-            <rect class="ill-row hl" x="34" y="122" width="56" height="14" rx="5"/><text class="ill-t big" x="62" y="132">ווידג'טים</text>
+            <rect class="ill-row hl" x="34" y="122" width="56" height="14" rx="5"/><text class="ill-t big" x="62" y="132">וידג'טים</text>
             <text class="ill-t big dim" x="62" y="153">טפטים</text>
             <circle class="ill-touch" cx="62" cy="96" r="12"/><circle class="ill-touch-c" cx="62" cy="96" r="5"/>
           </svg>
-          <p><b>1.</b> לחיצה ארוכה על מקום ריק במסך הבית, ואז <b>"ווידג'טים"</b>.</p>
+          <p><b>1.</b> לחיצה ארוכה על מקום ריק במסך הבית, ואז <b>"וידג'טים"</b>.</p>
         </li>
         <li>
           <svg viewBox="0 0 120 200" width="120" height="200" aria-hidden="true" class="ill">
@@ -250,7 +250,7 @@
             <path class="ill-arrow" d="M60 120 V160 M52 152 L60 160 L68 152"/>
             <circle class="ill-touch" cx="60" cy="80" r="12"/>
           </svg>
-          <p><b>2.</b> מוצאים את <b>Todoist</b>, לוחצים לחיצה ארוכה על ווידג'ט הרשימה וגוררים אותו למסך.</p>
+          <p><b>2.</b> מוצאים את <b>Todoist</b>, לוחצים לחיצה ארוכה על וידג'ט הרשימה וגוררים אותו למסך.</p>
         </li>
         <li>
           <svg viewBox="0 0 120 200" width="120" height="200" aria-hidden="true" class="ill">
@@ -273,20 +273,19 @@
     </section>
   </main>
 
-  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 14</span></footer>
+  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 15</span></footer>
 
   <div id="printSummary" class="print-summary"></div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 
-  <script src="config.js?v=14"></script>
-  <script src="js/data.js?v=14"></script>
-  <script src="js/data-more.js?v=14"></script>
-  <script src="js/ideas.js?v=14"></script>
-  <script src="js/data-extra.js?v=14"></script>
-  <script src="js/ai.js?v=14"></script>
-  <script src="js/todoist.js?v=14"></script>
-  <script src="js/app.js?v=14"></script>
+  <script src="config.js?v=15"></script>
+  <script src="js/data.js?v=15"></script>
+  <script src="js/ideas.js?v=15"></script>
+  <script src="js/data-extra.js?v=15"></script>
+  <script src="js/ai.js?v=15"></script>
+  <script src="js/todoist.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
 </body>
 </html>

@@ -458,3 +458,4 @@ textarea:focus, .tr-add input:focus { border-color: var(--accent); box-shadow: 0
 .top { background: color-mix(in srgb, var(--bg) 90%, transparent); }
 .badge { background: var(--margin); color: #fff; }
 .foot { padding-inline-start: max(56px, env(safe-area-inset-right, 0px)); }
+.pr-note { margin: -4px 0 0; font-size: 13px; color: var(--muted); }
