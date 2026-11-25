@@ -97,7 +97,8 @@
         var score = 0;
         // a two-word keyword ("אבא טוב") is more specific than a single word, so it counts double
         d.keywords.forEach(function (k) { if (hasKeyword(text, tokens, k)) score += k.indexOf(' ') === -1 ? 1 : 2; });
-        if (areas.indexOf(d.id) !== -1) score += 100; // picked by the person: always first
+        var pick = areas.indexOf(d.id);
+        if (pick !== -1) score += 100 + (10 - pick); // picked by the person: always first, in the order picked
         return { d: d, score: score, i: i };
       })
       .filter(function (x) { return x.score > 0; })
