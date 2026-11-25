@@ -617,3 +617,16 @@ details.more[open] summary { margin-bottom: 8px; }
 .tip { margin-top: 16px; padding: 14px; border: 1.5px dashed var(--p-stroke); border-radius: 12px; background: color-mix(in srgb, var(--hl) 14%, transparent); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .tip p { margin: 0; flex: 1 1 220px; font-size: 15px; }
 .tip .btn { text-decoration: none; }
+
+/* "לפנות אליך ב: אתה / את" */
+.gender { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; color: var(--muted); }
+.gender label { cursor: pointer; }
+.gender input { position: absolute; opacity: 0; pointer-events: none; }
+.gender label span { display: inline-block; padding: 3px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg); color: var(--fg); }
+.gender input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.gender input:focus-visible + span { outline: 3px solid var(--p-stroke); outline-offset: 2px; }
+
+/* ready-made plans */
+.presets { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); }
+.presets-q { margin: 0 0 8px; font-size: 14px; color: var(--muted); }
+.chip.preset { border-style: dashed; }

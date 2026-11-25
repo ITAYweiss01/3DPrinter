@@ -149,9 +149,10 @@
       fallback: fallback,
       domains: top.map(function (d) { return d.name; }),
       identity: 'אני אדם ' + joinHe(top.map(function (d) { return d.identity; })) + '.',
+      identity_f: 'אני אישה ' + joinHe(top.map(function (d) { return d.identity_f || d.identity; })) + '.',
       source: 'lib',
       traits: traits.map(function (t) {
-        return { name: t.name, how: t.how, starter: t.starter, habits: t.habits.slice(), stretch: t.stretch };
+        return { name: t.name, name_f: t.name_f, how: t.how, starter: t.starter, habits: t.habits.slice(), stretch: t.stretch };
       }),
       avoid: top[0].avoid,
       first_step: 'היום: ' + stackLine(traits[0])
@@ -268,10 +269,10 @@
         x2: (cx + (R - r) * dx).toFixed(1), y2: (cy + (R - r) * dy).toFixed(1)
       }));
       var bx = cx + R * dx, by = cy + R * dy;
-      var g = sv('g', { 'class': 'bubble pop', tabindex: '0', role: 'button', 'aria-label': t.name, 'data-i': i });
+      var g = sv('g', { 'class': 'bubble pop', tabindex: '0', role: 'button', 'aria-label': label(t), 'data-i': i });
       g.style.animationDelay = (i * 50) + 'ms';
       g.appendChild(sv('circle', { cx: bx.toFixed(1), cy: by.toFixed(1), r: r }));
-      var ls = labelLines(t.name);
+      var ls = labelLines(label(t));
       ls.forEach(function (line, k) {
         var tx = sv('text', { x: bx.toFixed(1), y: (by + (ls.length === 1 ? 0 : (k === 0 ? -8.5 : 8.5))).toFixed(1) });
         tx.textContent = line;
@@ -327,7 +328,7 @@
     selected = i;
     markSel();
     var t = current.traits[i];
-    $('dtitle').textContent = t.name;
+    $('dtitle').textContent = label(t);
     $('dhow').textContent = t.how;
     var sl = $('dstack');
     sl.textContent = '';
@@ -350,6 +351,31 @@
     refreshAddButtons();
   }
 
+  /* ---------- "אתה" / "את": only the big places (headings, questions, the identity sentence, trait names) ---------- */
+  var GENDER = load('ah-g', 'm') === 'f' ? 'f' : 'm';
+  function label(t) { return GENDER === 'f' && t.name_f ? t.name_f : t.name; }
+  function applyGenderCopy() {
+    document.querySelectorAll('[data-f]').forEach(function (el) {
+      if (!el.hasAttribute('data-m')) el.setAttribute('data-m', el.textContent);
+      el.textContent = GENDER === 'f' ? el.getAttribute('data-f') : el.getAttribute('data-m');
+    });
+    document.querySelectorAll('[data-fp]').forEach(function (el) {
+      if (!el.hasAttribute('data-mp')) el.setAttribute('data-mp', el.placeholder);
+      el.placeholder = GENDER === 'f' ? el.getAttribute('data-fp') : el.getAttribute('data-mp');
+    });
+    var r = document.querySelector('input[name="gender"][value="' + GENDER + '"]');
+    if (r) r.checked = true;
+  }
+  document.querySelectorAll('input[name="gender"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      GENDER = r.value === 'f' ? 'f' : 'm';
+      save('ah-g', GENDER);
+      applyGenderCopy();
+      if (currentPlan) { var keep = selected; render(currentPlan, isExample); select(Math.min(keep, current.traits.length - 1)); }
+    });
+  });
+  applyGenderCopy();
+
   var currentPlan = null, isExample = true;
   function render(plan, example) {
     currentPlan = plan; isExample = example;
@@ -357,6 +383,7 @@
     var data = Object.assign({}, plan, {
       traits: plan.traits.map(function (t) { return Object.assign({}, t, { habits: habitsFor(t, m) }); })
     });
+    if (GENDER === 'f' && plan.identity_f) data.identity = plan.identity_f;
     current = data;
     var src = $('source');
     src.hidden = example;
@@ -766,6 +793,36 @@
   }
   renderAreas();
 
+  /* ---------- ready-made plans: one tap, two 2-minute habits, straight to step 2 ---------- */
+  var PRESETS = [
+    { label: 'חזרה לכושר', areas: ['fitness', 'sleep'], when: 'morning', traits: ['פעיל', 'רענן'] },
+    { label: 'תקופת מבחנים', areas: ['study', 'focus'], when: 'evening', traits: ['שקדן', 'מרוכז'] },
+    { label: 'פחות טלפון', areas: ['focus', 'reading'], when: 'evening', traits: ['מרוכז', 'תולעת ספרים'] },
+    { label: 'בוקר רגוע', areas: ['sleep', 'mind'], when: 'morning', traits: ['משכים קום', 'רגוע'] },
+    { label: 'לשים כסף בצד', areas: ['money'], when: 'any', traits: ['חסכן', 'מבין בכסף'] },
+    { label: 'אחרי השחרור', areas: ['money', 'growth'], when: 'any', traits: ['חסכן', 'שאפתן'] },
+    { label: 'הורות טרייה', areas: ['parenting', 'mind'], when: 'any', traits: ['הורה רגוע', 'רגוע'] },
+    { label: 'לשמור על הבריאות', areas: ['health', 'nutrition'], when: 'morning', traits: ['בריא', 'אוכל בריא'] }
+  ];
+  function applyPreset(p) {
+    restoreAnswers({ areas: p.areas, when: p.when });
+    var replaced = T.habits.length > 0;
+    T.habits = []; saveT();
+    buildLocal(composeGoal(), false);
+    p.traits.forEach(function (name) {
+      var t = traitByName(name);
+      if (t) addHabit(starterTask(t), t.name, stackLine(t));
+    });
+    goStep(2); mark('built');
+    toast((replaced ? 'התוכנית הקודמת הוחלפה. ' : '') + 'יש לך 2 הרגלים קטנים. אפשר להחליף אותם במפה.');
+  }
+  PRESETS.forEach(function (p) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip preset'; b.textContent = p.label;
+    b.addEventListener('click', function () { applyPreset(p); });
+    $('presets').appendChild(b);
+  });
+
   /* ---------- ideas: 6 random thought-starters, refreshed on demand ---------- */
   var IDEAS = Array.isArray(window.HABIT_IDEAS) ? window.HABIT_IDEAS.slice() : [];
   var ideaPos = 0;
@@ -827,12 +884,17 @@
     var i = ladder.indexOf(h.text);
     return i !== -1 && i < ladder.length - 1 ? ladder[i + 1] : '';
   }
+  // for each habit: the next step on the same trait's ladder
+  function nextSteps() {
+    return T.habits.map(function (h) { var n = nextFor(h); return n ? { after: h.text, next: n } : null; }).filter(Boolean);
+  }
+  // one check-in for the whole plan (one task, one calendar event), not one per habit
   function levelUps() {
-    return T.habits.map(function (h) {
-      var n = nextFor(h);
-      return n ? { text: 'שלב הבא: ' + n, levelup: true, after: h.text,
-        note: 'ההרגל "' + h.text + '" כבר קורה כמעט מעצמו? אם כן, הוסף את זה. אם עוד לא, דחה את המשימה בשבוע.' } : null;
-    }).filter(Boolean);
+    var steps = nextSteps();
+    if (!steps.length) return [];
+    return [{ text: '3 שבועות של הרגלים: מוכנים לשלב הבא?', levelup: true,
+      note: steps.map(function (x) { return '• אם "' + x.after + '" כבר קורה כמעט מעצמו: ' + x.next; }).join('\n') +
+        '\nמה שעוד לא אוטומטי, ממשיכים כמו שהוא. אפשר לדחות את המשימה בשבוע.' }];
   }
   function planItems() {
     return T.habits.map(function (h) { return { text: h.text, note: h.note, schedule: h.schedule }; }).concat(levelUps());
@@ -850,14 +912,14 @@
     if (goal && !isExample) out.push('המטרה שכתבתי: ' + goal, '');
     out.push('התכונות שלי');
     d.traits.forEach(function (t) {
-      out.push('• ' + t.name + ': ' + t.how);
+      out.push('• ' + label(t) + ': ' + t.how);
       out.push('  שתי דקות: ' + stackLine(t));
     });
     out.push('');
     if (T.habits.length) {
       out.push('התוכנית שלי');
       planLines().forEach(function (l) { out.push('☐ ' + l); });
-      levelUps().forEach(function (u) { out.push('בעוד 3 שבועות, אם "' + u.after + '" כבר קל: ' + u.text.replace(/^שלב הבא: /, '')); });
+      nextSteps().forEach(function (u) { out.push('בעוד 3 שבועות, אם "' + u.after + '" כבר קל: ' + u.next); });
       out.push('');
     }
     out.push('הצעד הראשון: ' + d.first_step.replace(/^היום:\s*/, ''));
@@ -954,7 +1016,7 @@
     var tr = el('div', 'ps-traits');
     d.traits.forEach(function (t) {
       var c = el('div', 'ps-trait');
-      c.appendChild(el('h3', null, t.name));
+      c.appendChild(el('h3', null, label(t)));
       c.appendChild(el('p', null, t.how));
       c.appendChild(el('p', 'ps-stack', 'שתי דקות: ' + stackLine(t)));
       tr.appendChild(c);
@@ -972,7 +1034,7 @@
         ul.appendChild(li);
       });
       box.appendChild(ul);
-      levelUps().forEach(function (u) { box.appendChild(el('p', 'ps-next', 'בעוד 3 שבועות, אם "' + u.after + '" כבר קל: ' + u.text.replace(/^שלב הבא: /, ''))); });
+      nextSteps().forEach(function (u) { box.appendChild(el('p', 'ps-next', 'בעוד 3 שבועות, אם "' + u.after + '" כבר קל: ' + u.next)); });
     }
 
     var two = el('div', 'ps-two');
