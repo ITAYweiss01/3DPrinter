@@ -23,7 +23,8 @@
     try { history.replaceState(null, '', location.pathname + location.search + '#tracker'); } catch (e) {}
   }
 
-  function available() { return /^https:\/\/[^\s/]+/.test(proxy); }
+  // OAuth mode only when the Worker says Todoist is configured (see HabitFeatures in ai.js)
+  function available() { return !!(window.HabitFeatures && window.HabitFeatures.get().todoist); }
   function connected() { return !!sid; }
   function emit() { listeners.forEach(function (f) { f(); }); }
 

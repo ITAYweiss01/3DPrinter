@@ -200,6 +200,15 @@ export default {
       }
     }
 
+    /* ---- which features are configured on this server (no secrets, just yes/no) ---- */
+    if (req.method === 'GET' && path === '/features') {
+      return reply(200, {
+        claude: !!env.ANTHROPIC_API_KEY,
+        todoist: !!(env.TODOIST && env.TODOIST_CLIENT_ID && env.TODOIST_CLIENT_SECRET && env.TOKEN_KEY),
+        suggest: !!env.SUGGESTIONS
+      }, corsH);
+    }
+
     /* ---- Todoist: add habits / status / disconnect ---- */
     if (req.method === 'POST' && path.startsWith('/todoist/')) {
       if (!(req.headers.get('Content-Type') || '').startsWith('application/json')) return reply(415, { error: 'bad_input' }, corsH);

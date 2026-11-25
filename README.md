@@ -19,6 +19,13 @@
 
 התוכנית נשמרת ב־`localStorage` בדפדפן בלבד, עד שמורידים אותה או שולחים ל־Todoist.
 
+## השרת (Cloudflare Worker)
+
+ה־Worker פרוס ב־`https://api.tiny-habits-plan.workers.dev` (שם גנרי, בלי פרטים אישיים).
+האתר שואל אותו ב־`GET /features` אילו יכולות מוגדרות (`claude`, `todoist`, `suggest`), ומפעיל רק אותן. כך אפשר להגדיר כל חלק בנפרד בלי שכפתורים יישברו.
+
+פריסה מחדש: `cd worker && npx wrangler deploy`.
+
 ## חיבור ל־Claude
 
 המפתח של Claude לא נמצא באתר בכלל. הוא נשמר רק ב־Cloudflare Worker (תיקיית `worker/`),

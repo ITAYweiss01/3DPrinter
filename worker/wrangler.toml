@@ -1,4 +1,4 @@
-name = "habits-proxy"
+name = "api"
 main = "worker.js"
 compatibility_date = "2026-11-01"
 
@@ -28,7 +28,7 @@ namespace_id = "1001"
 # then paste the id it prints here.
 [[kv_namespaces]]
 binding = "SUGGESTIONS"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "f7a0fe24cf684eeaa0f603f82198a0af"
 
 # Topic approval opens a PR in this repo.
 # Secrets (never in this file):
@@ -44,4 +44,4 @@ id = "REPLACE_WITH_KV_NAMESPACE_ID"
 # 3. npx wrangler kv namespace create TODOIST   and paste its id below.
 [[kv_namespaces]]
 binding = "TODOIST"
-id = "REPLACE_WITH_TODOIST_KV_NAMESPACE_ID"
+id = "0e21b69b847d40ab904abde674d3993a"
