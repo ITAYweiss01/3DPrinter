@@ -1,0 +1,13 @@
+{
+  "name": "habits-proxy",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "node test.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.6.0"
+  }
+}

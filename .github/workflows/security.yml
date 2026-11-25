@@ -1,0 +1,49 @@
+name: Security
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Scan for leaked keys
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read   # gitleaks lists the PR's commits
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  no-keys-in-site:
+    name: No API keys in site files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if anything looks like an Anthropic key
+        run: |
+          if grep -rInE 'sk-ant-[A-Za-z0-9_-]{20,}' --exclude-dir=.git --exclude-dir=node_modules .; then
+            echo "::error::Found something that looks like an API key. Remove it and rotate the key."
+            exit 1
+          fi
+
+  worker-tests:
+    name: Worker security tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm test
