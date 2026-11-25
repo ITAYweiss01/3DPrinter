@@ -47,14 +47,10 @@
     emit();
   }
 
-  // "X (cue)" from the 2-minute habit becomes task "X" with note "אחרי ש<cue>"
+  // plan item -> Todoist task; a 2-minute habit carries its full sentence as the description
   function toTask(item) {
     var schedule = item && item.schedule ? item.schedule : { freq: 'daily', days: [], time: '' };
-    return {
-      content: item.text,
-      note: item.cue ? 'הרגל של שתי דקות: אחרי ש' + item.cue + ', ' + item.text + '.' : '',
-      schedule: schedule
-    };
+    return { content: item.text, note: item.note ? 'הרגל של שתי דקות: ' + item.note : '', schedule: schedule };
   }
 
   /* ---------- direct mode (no server yet) ----------

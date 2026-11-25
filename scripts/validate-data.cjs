@@ -1,8 +1,7 @@
-// Checks the trait library (js/data.js + js/data-more.js): run with `node scripts/validate-data.cjs`.
+// Checks the trait library (js/data.js): run with `node scripts/validate-data.cjs`.
 const path = require('path');
 global.window = {};
 require(path.join(__dirname, '../js/data.js'));
-require(path.join(__dirname, '../js/data-more.js'));
 require(path.join(__dirname, '../js/ideas.js'));
 const D = window.HABIT_DATA;
 const errs = [];
@@ -15,7 +14,13 @@ for (const [dom, t] of all) {
   if (words.length > 2) errs.push(`${dom}: trait name has more than 2 words: ${t.name}`);
   words.forEach((w) => { if ([...w].length > 8) errs.push(`${dom}: word longer than 8 letters (won't fit the map): ${w}`); });
   if (t.habits.length !== 5) errs.push(`${dom}/${t.name}: ${t.habits.length} habits (expected 5)`);
-  if (!t.how || !t.stretch || !t.starter || !t.starter.cue || !t.starter.text) errs.push(`${dom}/${t.name}: missing field`);
+  if (!t.how || !t.stretch || !t.starter || !t.starter.cue || !t.starter.text || !t.starter.task) errs.push(`${dom}/${t.name}: missing field`);
+  // habits are tasks: no first-person present ("אני ..."), and no trailing period
+  t.habits.concat([t.stretch, t.starter.task]).forEach((h) => {
+    if (/^אני /.test(h)) errs.push(`${dom}/${t.name}: habit in first person: ${h}`);
+    if (/\.$/.test(h)) errs.push(`${dom}/${t.name}: habit ends with a period: ${h}`);
+  });
+  if (!/^אני /.test(t.starter.text)) errs.push(`${dom}/${t.name}: starter text should start with "אני": ${t.starter.text}`);
   else if (/^אחרי/.test(t.starter.cue)) errs.push(`${dom}/${t.name}: cue must not start with "אחרי"`);
   if (new Set(t.habits).size !== t.habits.length) errs.push(`${dom}/${t.name}: duplicate habit`);
 }
