@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.workers.dev; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.workers.dev https://api.todoist.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>מי אני רוצה להיות</title>
@@ -148,6 +148,15 @@
             <span id="tdTitle">המשך ב־Todoist</span>
           </h3>
           <p class="muted" id="tdSub">ההרגלים ייכנסו לפרויקט "הרגלים" כמשימות חוזרות, לפי הימים והשעות שקבעת. משם ממשיכים, כולל הווידג'ט במסך הבית.</p>
+          <form class="td-direct" id="tdDirect" autocomplete="off" hidden>
+            <label for="tdToken">טוקן ה־API של Todoist</label>
+            <input id="tdToken" type="password" dir="ltr" spellcheck="false" autocomplete="off" placeholder="40 תווים">
+            <ol class="td-steps">
+              <li>פותחים את <a href="https://app.todoist.com/app/settings/integrations/developer" target="_blank" rel="noopener noreferrer">ההגדרות של Todoist</a> (באפליקציה: הגדרות, ואז Integrations, ואז Developer).</li>
+              <li>לוחצים <span dir="ltr">Copy API token</span> ומדביקים כאן.</li>
+            </ol>
+            <p class="note">הטוקן נשלח ישר ל־Todoist, רק לשליחה הזאת, ולא נשמר בשום מקום.</p>
+          </form>
           <div class="row-actions">
             <button type="button" class="btn small primary" id="tdSend">שלח ל־Todoist</button>
             <button type="button" class="btn small ghost" id="tdDisconnect" hidden>נתק</button>

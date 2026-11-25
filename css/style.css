@@ -305,3 +305,11 @@ dialog input[type="password"], dialog input[type="url"] { width: 100%; font: inh
   .ps-laws { margin: 0; padding-inline-start: 18px; font-size: 10.5pt; }
   .ps-foot { margin-top: 18px; color: #5b6372; font-size: 9pt; }
 }
+.td-direct { display: flex; flex-direction: column; gap: 4px; }
+.td-direct label { margin: 0; font-size: 14px; }
+.td-direct input { width: 100%; font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.td-direct .note { margin: 0; }
+.td-direct a { color: var(--p-text); }
+.td-steps { margin: 2px 0 0; padding-inline-start: 18px; font-size: 13px; color: var(--muted); }
+.td-steps li { margin: 2px 0; }
+.td-steps a { color: var(--p-text); }

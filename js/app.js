@@ -432,6 +432,34 @@
   });
 
   /* ---------- Todoist ---------- */
+  // direct mode: no Worker yet -> one-time personal token, sent straight to Todoist
+  (function () {
+    var TD = window.HabitTodoist;
+    if (!TD || TD.available()) return;
+    $('todoistBox').hidden = false;
+    $('tdDirect').hidden = false;
+    function send(ev) {
+      if (ev) ev.preventDefault();
+      if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; location.hash = '#plan'; return; }
+      var token = $('tdToken').value;
+      if (!token.trim()) { $('tdStatus').textContent = 'הדבק את הטוקן של Todoist.'; $('tdToken').focus(); return; }
+      $('tdSend').disabled = true;
+      $('tdStatus').textContent = 'שולח...';
+      TD.directAdd(token, T.habits.map(function (h) { return { text: h.text, schedule: h.schedule }; })).then(function (r) {
+        $('tdToken').value = '';
+        var parts = [];
+        if (r.added) parts.push('נוספו ' + r.added);
+        if (r.updated) parts.push('עודכנו ' + r.updated);
+        $('tdStatus').textContent = (parts.length ? parts.join(', ') + '. ' : 'הכל כבר היה ב־Todoist. ') +
+          'ההרגלים בפרויקט "הרגלים". בווידג\'ט של Todoist אפשר לבחור את הפרויקט הזה. הטוקן נמחק מהדף.';
+        toast('נשלח ל־Todoist');
+      }, function (e) { $('tdStatus').textContent = e.message; }).then(function () { $('tdSend').disabled = false; });
+      token = '';
+    }
+    $('tdSend').addEventListener('click', send);
+    $('tdDirect').addEventListener('submit', send);
+  })();
+
   (function () {
     var TD = window.HabitTodoist;
     if (!TD || !TD.available()) return;
