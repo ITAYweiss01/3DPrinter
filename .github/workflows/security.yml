@@ -45,5 +45,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: node ../scripts/validate-data.cjs
       - run: npm install --no-audit --no-fund
       - run: npm test
