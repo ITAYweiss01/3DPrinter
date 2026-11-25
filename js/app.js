@@ -381,7 +381,10 @@
   });
 
   /* ---------- UI: plan ---------- */
+  // the home-screen demo (js/screen.js) shows the plan's habits in its widget
+  window.HabitPlan = { habits: function () { return T.habits.map(function (h) { return { text: h.text, time: h.schedule.time, freq: h.schedule.freq }; }); } };
   function renderPlan() {
+    try { document.dispatchEvent(new CustomEvent('habits-change')); } catch (e) {}
     var lim = $('planLimit');
     lim.hidden = T.habits.length < MAX_HABITS;
     lim.textContent = T.habits.length > MAX_HABITS
