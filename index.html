@@ -102,6 +102,15 @@
       </div>
     </section>
 
+    <div class="panel suggest" id="suggest" hidden>
+      <h3>עוד אין לנו נושא שמור למטרה הזאת</h3>
+      <p class="muted">רוצה שנוסיף אותו? הבקשה תישמר בלי שם ובלי כתובת IP, ותתווסף לאתר רק אחרי אישור.</p>
+      <div class="actions">
+        <button type="button" class="btn small" id="suggestSend">שלח בקשה לנושא חדש</button>
+      </div>
+      <p class="note" id="suggestMsg" role="status" aria-live="polite"></p>
+    </div>
+
     <div class="two">
       <div class="panel"><h3>הצעד הראשון להיום</h3><p id="first"></p></div>
       <div class="panel"><h3>מה אני לא עושה</h3><p id="avoid"></p></div>
@@ -151,6 +160,7 @@
 
   <script src="config.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/data-extra.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/app.js"></script>
 </body>

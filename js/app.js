@@ -2,6 +2,22 @@
   'use strict';
 
   var D = window.HABIT_DATA;
+
+  // approved topics from visitor requests (js/data-extra.js)
+  (function mergeExtra() {
+    var extra = window.HABIT_EXTRA;
+    if (!Array.isArray(extra)) return;
+    var ids = {};
+    D.domains.forEach(function (d) { ids[d.id] = 1; });
+    extra.forEach(function (d) {
+      var ok = d && typeof d.id === 'string' && !ids[d.id] && typeof d.name === 'string' &&
+        Array.isArray(d.keywords) && d.keywords.length && typeof d.identity === 'string' && typeof d.avoid === 'string' &&
+        Array.isArray(d.traits) && d.traits.length >= 2 && d.traits.every(function (t) {
+          return t && t.name && t.how && t.starter && t.starter.cue && t.starter.text && Array.isArray(t.habits) && t.habits.length && t.stretch;
+        });
+      if (ok) { D.domains.push(d); ids[d.id] = 1; }
+    });
+  })();
   var SVGNS = 'http://www.w3.org/2000/svg';
   var $ = function (id) { return document.getElementById(id); };
 
@@ -430,8 +446,34 @@
     save(CACHE_KEY, c);
   }
 
+  /* ---------- topic requests ---------- */
+  var SENT_KEY = 'ah-suggested';
+  function offerSuggest(goal) {
+    var box = $('suggest');
+    var ai = window.HabitAI;
+    var sent = load(SENT_KEY, []);
+    var canSend = !!(ai && ai.configured() && ai.suggest);
+    if (!canSend || matchDomains(goal).length || sent.indexOf(goal) !== -1) { box.hidden = true; return; }
+    box.hidden = false;
+    $('suggestSend').disabled = false;
+    $('suggestSend').hidden = false;
+    $('suggestMsg').textContent = '';
+    $('suggestSend').onclick = function () {
+      $('suggestSend').disabled = true;
+      ai.suggest(goal).then(function () {
+        sent.push(goal); save(SENT_KEY, sent.slice(-50));
+        $('suggestSend').hidden = true;
+        $('suggestMsg').textContent = 'תודה! הבקשה נשלחה לאישור. אם הנושא יאושר, הוא יופיע באתר.';
+      }, function (e) {
+        $('suggestSend').disabled = false;
+        $('suggestMsg').textContent = ai.errorCopy(e) || 'לא הצלחנו לשלוח. נסה שוב.';
+      });
+    };
+  }
+
   function show(goal, plan, scroll) {
     render(plan, false);
+    offerSuggest(goal);
     save('ah-last', { goal: goal, m: minutes() });
     try { history.replaceState(null, '', '?g=' + encodeURIComponent(goal) + '&t=' + minutes()); } catch (e) {}
     $('share').hidden = false;
@@ -566,6 +608,7 @@
     if (cached) show(startGoal, cached, false); else buildLocal(startGoal, false);
   } else {
     render(generate('בריא מסודר ללמוד חברים ריכוז'), true);
+    $('suggest').hidden = true;
   }
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {

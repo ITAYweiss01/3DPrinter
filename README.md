@@ -51,6 +51,28 @@ window.HABITS_CONFIG = { proxyUrl: 'https://habits-proxy.<you>.workers.dev', tur
 
 בדיקות האבטחה של ה־Worker: `cd worker && npm test`.
 
+## בקשות לנושאים חדשים
+
+כשמישהו כותב מטרה שלא מתאימה לאף נושא שמור, האתר מציע לו **לשלוח בקשה לנושא חדש**. שום דבר לא נשלח בלי שהוא לוחץ.
+הבקשה נשמרת ב־Workers KV (פרטי, לא ברפוזיטורי), בלי IP, ואחרי הסתרה של מיילים, טלפונים וקישורים. בקשות זהות מתאחדות עם מונה.
+
+**לאשר בקשות:** נכנסים ל־`admin.html` באתר (למשל https://itayweiss01.github.io/3DPrinter/admin.html) עם סיסמת הניהול.
+לכל בקשה: **נסח נושא עם Claude** כותב טיוטה בפורמט של הספרייה, אפשר **לערוך**, ואז **אשר ופתח PR**.
+האישור פותח Pull Request שמוסיף את הנושא ל־`js/data-extra.js`. **מיזוג ה־PR הוא האישור הסופי**, ואחריו הנושא באתר.
+ה־PR לא כולל את הטקסט של המבקרים, כי הרפוזיטורי ציבורי.
+
+הגדרה חד־פעמית ב־Worker:
+
+```bash
+cd worker
+npx wrangler kv namespace create SUGGESTIONS   # מעתיקים את ה־id ל־wrangler.toml
+npx wrangler secret put ADMIN_TOKEN            # סיסמה ארוכה ואקראית (לפחות 24 תווים)
+npx wrangler secret put GITHUB_TOKEN           # Fine-grained token: רק הרפוזיטורי הזה, Contents + Pull requests: Read and write
+npx wrangler deploy
+```
+
+סיסמה אקראית טובה: `openssl rand -base64 32`.
+
 ## הרצה מקומית
 
 ```bash
@@ -75,10 +97,12 @@ index.html            הדף
 css/style.css         עיצוב (בהיר/כהה, RTL, מותאם לנייד)
 js/data.js            ספריית התחומים, התכונות וההרגלים
 js/app.js             המחולל המקומי, המפה והמעקב
-js/ai.js              מצב Claude: שולח מטרה ל־Worker (בלי מפתח)
+js/ai.js              מצב Claude ובקשות לנושאים: שולח ל־Worker (בלי מפתח)
+js/data-extra.js      נושאים שאושרו מבקשות של מבקרים (מתעדכן דרך PR)
+admin.html, js/admin.js  דף ניהול: אישור או דחייה של בקשות לנושאים
 js/theme.js           מצב בהיר/כהה (בלי סקריפט inline, בגלל ה־CSP)
 config.js             כתובת ה־Worker (ציבורי, בלי מפתחות)
-worker/               Cloudflare Worker: המפתח, הפרומפט, הגבלת קצב ובדיקות אבטחה
+worker/               Cloudflare Worker: המפתח, הפרומפט, הגבלת קצב, בקשות לנושאים ובדיקות אבטחה
 SECURITY.md           מדיניות האבטחה ומה לעשות אם מפתח דלף
 sw.js                 מטמון לעבודה בלי אינטרנט
 manifest.webmanifest  התקנה כאפליקציה
