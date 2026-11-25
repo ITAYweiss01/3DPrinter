@@ -12,8 +12,11 @@
   // Ask the Worker which features are set up; until it answers, everything is off.
   var features = { claude: false, todoist: false, suggest: false };
   var hasProxy = /^https:\/\/[^\s/]+/.test(proxy);
+  // give up after 5 seconds, so a slow or blocked request never hides features for good
+  var ctl = window.AbortController ? new AbortController() : null;
+  if (ctl) setTimeout(function () { ctl.abort(); }, 5000);
   var ready = !hasProxy ? Promise.resolve(features) : fetch(proxy + '/features', {
-    mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer'
+    mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined
   }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (f) {
     features = { claude: f.claude === true, todoist: f.todoist === true, suggest: f.suggest === true };
     return features;

@@ -38,10 +38,9 @@
   }
   var DAY_SHORT = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
   var DAY_LONG = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-  // 2-minute habits are stored as "action (cue)"; show them as one sentence
-  function displayHabit(text) {
-    var m = /^(.*) \((.+)\)$/.exec(text);
-    return m ? 'אחרי ש' + m[2] + ', ' + m[1] : text;
+  // 2-minute habits keep their trigger in h.cue; show them as one sentence
+  function displayHabit(h) {
+    return h.cue ? 'אחרי ש' + h.cue + ', ' + h.text : h.text;
   }
   function cleanSchedule(sc) {
     sc = sc || {};
@@ -176,15 +175,24 @@
   // stored under the old key so earlier visitors keep their habits
   var T = load('ah-tracker', { habits: [] });
   if (!Array.isArray(T.habits)) T.habits = [];
-  T.habits.forEach(function (h) { h.schedule = cleanSchedule(h.schedule); delete h.done; });
+  // older versions stored a 2-minute habit as "action (cue)"; split it only when the
+  // part in parentheses is a known cue, so habits like "25 דקות לימוד (פומודורו)" stay intact
+  var KNOWN_CUES = {};
+  D.domains.concat([{ traits: D.general }]).forEach(function (d) { d.traits.forEach(function (t) { KNOWN_CUES[t.starter.cue] = 1; }); });
+  T.habits.forEach(function (h) {
+    h.schedule = cleanSchedule(h.schedule); delete h.done;
+    var m = !h.cue && /^(.*) \((.+)\)$/.exec(h.text);
+    if (m && KNOWN_CUES[m[2]]) { h.text = m[1]; h.cue = m[2]; }
+  });
+  save('ah-tracker', T);
   function saveT() { save('ah-tracker', T); }
   function hasHabit(text) { return T.habits.some(function (h) { return h.text === text; }); }
-  function addHabit(text, trait) {
+  function addHabit(text, trait, cue) {
     text = String(text).trim().slice(0, 120);
     if (!text) return false;
     if (hasHabit(text)) { removeHabit(T.habits.filter(function (h) { return h.text === text; })[0].id); return false; }
     if (T.habits.length >= 20) { toast('אפשר עד 20 הרגלים בתוכנית. כדאי להתחיל קטן.'); return false; }
-    T.habits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, trait: trait || '', created: key(new Date()), schedule: cleanSchedule() });
+    T.habits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, trait: trait || '', cue: cue || '', created: key(new Date()), schedule: cleanSchedule() });
     saveT(); renderPlan(); refreshAddButtons();
     return true;
   }
@@ -270,7 +278,7 @@
       b.setAttribute('aria-label', (on ? 'הסר מהתוכנית: ' : 'הוסף לתוכנית: ') + b.dataset.text);
     });
     if (current) {
-      var t = current.traits[selected], s = $('addStarter'), on = hasHabit(t.starter.text + ' (' + t.starter.cue + ')');
+      var t = current.traits[selected], s = $('addStarter'), on = hasHabit(t.starter.text);
       s.textContent = on ? '✓ בתוכנית' : '+ הוסף לתוכנית';
       s.classList.toggle('done', on);
       var dots = document.querySelectorAll('#map .bubble .dot');
@@ -335,7 +343,7 @@
 
   $('addStarter').addEventListener('click', function () {
     var t = current.traits[selected];
-    var added = addHabit(t.starter.text + ' (' + t.starter.cue + ')', t.name);
+    var added = addHabit(t.starter.text, t.name, t.starter.cue);
     toast(added ? 'נוסף לתוכנית' : 'הוסר מהתוכנית');
   });
 
@@ -358,7 +366,7 @@
       var li = document.createElement('li'); li.className = 'plan-row';
 
       var top = document.createElement('div'); top.className = 'pr-top';
-      var tx = document.createElement('span'); tx.className = 'pr-text'; tx.textContent = displayHabit(h.text);
+      var tx = document.createElement('span'); tx.className = 'pr-text'; tx.textContent = displayHabit(h);
       var del = document.createElement('button');
       del.type = 'button'; del.className = 'tr-del'; del.textContent = '×';
       del.setAttribute('aria-label', 'הסר מהתוכנית: ' + h.text);
@@ -435,17 +443,18 @@
   // direct mode: no Worker yet -> one-time personal token, sent straight to Todoist
   function setupTodoistDirect() {
     var TD = window.HabitTodoist;
-    if (!TD || TD.available()) return;
+    if (!TD) return;
     $('todoistBox').hidden = false;
     $('tdDirect').hidden = false;
     function send(ev) {
       if (ev) ev.preventDefault();
+      if (TD.available()) return; // OAuth mode took over
       if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; location.hash = '#plan'; return; }
       var token = $('tdToken').value;
       if (!token.trim()) { $('tdStatus').textContent = 'הדבק את הטוקן של Todoist.'; $('tdToken').focus(); return; }
       $('tdSend').disabled = true;
       $('tdStatus').textContent = 'שולח...';
-      TD.directAdd(token, T.habits.map(function (h) { return { text: h.text, schedule: h.schedule }; })).then(function (r) {
+      TD.directAdd(token, T.habits.map(function (h) { return { text: h.text, cue: h.cue, schedule: h.schedule }; })).then(function (r) {
         $('tdToken').value = '';
         var parts = [];
         if (r.added) parts.push('נוספו ' + r.added);
@@ -464,6 +473,7 @@
     var TD = window.HabitTodoist;
     if (!TD || !TD.available()) return;
     $('todoistBox').hidden = false;
+    $('tdDirect').hidden = true;
     var PENDING = 'ah-td-send';
     function paint() {
       var on = TD.connected();
@@ -475,7 +485,7 @@
       if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; location.hash = '#plan'; return; }
       $('tdSend').disabled = true;
       $('tdStatus').textContent = 'שולח...';
-      TD.add(T.habits.map(function (h) { return { text: h.text, schedule: h.schedule }; })).then(function (r) {
+      TD.add(T.habits.map(function (h) { return { text: h.text, cue: h.cue, schedule: h.schedule }; })).then(function (r) {
         var parts = [];
         if (r.added) parts.push('נוספו ' + r.added);
         if (r.updated) parts.push('עודכנו ' + r.updated);
@@ -643,10 +653,10 @@
     $('modeDot').classList.toggle('on', on);
   }
   refreshModeLabel();
+  setupTodoistDirect(); // always available at once; replaced by OAuth if the server supports it
   var FEAT = window.HabitFeatures ? window.HabitFeatures.ready : Promise.resolve({});
   FEAT.then(function () {
     refreshModeLabel();
-    setupTodoistDirect();
     setupTodoistOAuth();
     var g = $('goal').value.trim();
     if (g && current && !isExample) offerSuggest(g);
@@ -660,7 +670,7 @@
 
   /* ---------- summary: text, file, PDF ---------- */
   function planLines() {
-    return T.habits.map(function (h) { return displayHabit(h.text) + ' · ' + scheduleText(h.schedule); });
+    return T.habits.map(function (h) { return displayHabit(h) + ' · ' + scheduleText(h.schedule); });
   }
   function toText() {
     var d = current, out = ['מי אני רוצה להיות', new Date().toLocaleDateString('he-IL'), '', d.identity, ''];
@@ -728,7 +738,7 @@
       T.habits.forEach(function (h) {
         var li = el('li');
         li.appendChild(el('span', 'ps-box'));
-        li.appendChild(el('span', 'ps-habit', displayHabit(h.text)));
+        li.appendChild(el('span', 'ps-habit', displayHabit(h)));
         li.appendChild(el('span', 'ps-when', scheduleText(h.schedule)));
         ul.appendChild(li);
       });

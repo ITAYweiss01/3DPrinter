@@ -49,12 +49,12 @@
 
   // "X (cue)" from the 2-minute habit becomes task "X" with note "אחרי ש<cue>"
   function toTask(item) {
-    var text = typeof item === 'string' ? item : item.text;
     var schedule = item && item.schedule ? item.schedule : { freq: 'daily', days: [], time: '' };
-    var mm = /^(.*) \((.+)\)$/.exec(text);
-    return mm
-      ? { content: mm[1], note: 'הרגל של שתי דקות: אחרי ש' + mm[2] + ', ' + mm[1] + '.', schedule: schedule }
-      : { content: text, note: '', schedule: schedule };
+    return {
+      content: item.text,
+      note: item.cue ? 'הרגל של שתי דקות: אחרי ש' + item.cue + ', ' + item.text + '.' : '',
+      schedule: schedule
+    };
   }
 
   /* ---------- direct mode (no server yet) ----------
