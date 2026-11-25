@@ -44,6 +44,11 @@
     </section>
 
     <form class="panel" id="build" autocomplete="off">
+      <div class="mode">
+        <span class="mode-dot" id="modeDot" aria-hidden="true"></span>
+        <span id="modeLabel">מצב מקומי: ספרייה של 11 תחומים</span>
+        <button type="button" class="link" id="aiOpen">הגדרות AI</button>
+      </div>
       <label for="goal">מה אתה רוצה לעשות או להשיג?</label>
       <textarea id="goal" maxlength="600" placeholder="למשל: אני רוצה להיות בכושר, להצליח בלימודים ולהיות יותר מסודר"></textarea>
       <div class="row" aria-label="דוגמאות">
@@ -63,7 +68,8 @@
       </fieldset>
 
       <div class="actions">
-        <button type="submit" class="btn primary">בנה לי הרגלים</button>
+        <button type="submit" class="btn primary" id="go">בנה לי הרגלים</button>
+        <button type="button" class="btn" id="stop" hidden>עצור</button>
         <button type="button" class="btn ghost" id="share" hidden>שתף קישור</button>
       </div>
       <p id="status" role="status" aria-live="polite"></p>
@@ -73,6 +79,7 @@
       <div class="result-head">
         <span class="tag" id="tag">דוגמה</span>
         <span class="domains" id="domains"></span>
+        <span class="source" id="source" hidden></span>
       </div>
       <p class="identity" id="identity"></p>
 
@@ -141,7 +148,35 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+  <dialog id="aiDialog" aria-labelledby="aiTitle">
+    <form id="aiForm" autocomplete="off">
+      <h2 id="aiTitle">חיבור ל־Claude</h2>
+      <p class="muted">עם Claude, כל מטרה שתכתוב מקבלת תכונות והרגלים שנכתבים במיוחד בשבילך, לא רק מהספרייה.</p>
+      <fieldset class="opts">
+        <legend class="sr">מצב</legend>
+        <label class="opt"><input type="radio" name="aimode" value="off"><span><b>מקומי</b><small>בלי אינטרנט ובלי מפתח. ספרייה של 11 תחומים.</small></span></label>
+        <label class="opt"><input type="radio" name="aimode" value="key"><span><b>מפתח API אישי</b><small>מדביקים מפתח מ־console.anthropic.com. נשמר רק בדפדפן הזה ונשלח רק ל־Anthropic.</small></span></label>
+        <label class="opt"><input type="radio" name="aimode" value="proxy"><span><b>שרת Worker</b><small>כתובת של Worker שמחזיק את המפתח (ראו README). מתאים לאתר ציבורי.</small></span></label>
+      </fieldset>
+      <div class="field" id="keyField" hidden>
+        <label for="aiKey">מפתח API</label>
+        <input id="aiKey" type="password" dir="ltr" placeholder="sk-ant-..." spellcheck="false">
+      </div>
+      <div class="field" id="proxyField" hidden>
+        <label for="aiProxy">כתובת ה־Worker</label>
+        <input id="aiProxy" type="url" dir="ltr" placeholder="https://habits-proxy.example.workers.dev" spellcheck="false">
+      </div>
+      <p class="err-line" id="aiErr" role="alert"></p>
+      <div class="actions">
+        <button type="submit" class="btn primary">שמור</button>
+        <button type="button" class="btn ghost" id="aiCancel">ביטול</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="config.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
+  <script type="module" src="js/ai.js"></script>
 </body>
 </html>

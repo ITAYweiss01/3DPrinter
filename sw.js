@@ -1,6 +1,6 @@
 /* Offline cache: network first for pages, cache fallback. */
-var CACHE = 'habits-v1';
-var FILES = ['./', 'index.html', 'css/style.css', 'js/data.js', 'js/app.js', 'icon.svg', 'manifest.webmanifest'];
+var CACHE = 'habits-v2';
+var FILES = ['./', 'index.html', 'config.js', 'css/style.css', 'js/data.js', 'js/app.js', 'js/ai.js', 'vendor/anthropic-sdk-1.6.0.mjs', 'icon.svg', 'manifest.webmanifest'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
 });

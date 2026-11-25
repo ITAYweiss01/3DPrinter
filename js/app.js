@@ -48,6 +48,7 @@
 
   function habitsFor(t, minutes) {
     var list = [];
+    if (typeof t.habits[0] === 'object') t = Object.assign({}, t, { habits: t.habits.map(function (h) { return h.text; }) });
     var n = minutes >= 60 ? 3 : minutes >= 30 ? 2 : 1;
     t.habits.slice(0, n).forEach(function (h) { list.push({ text: h }); });
     if (minutes >= 60 && t.stretch) list.push({ text: t.stretch, lvl: 'העמקה' });
@@ -56,7 +57,7 @@
 
   function stackLine(t) { return 'אחרי ש' + t.starter.cue + ', ' + t.starter.text + '.'; }
 
-  function generate(goal, minutes) {
+  function generate(goal) {
     var matched = matchDomains(goal);
     var fallback = matched.length === 0;
     var doms = fallback ? D.domains.filter(function (d) { return ['fitness', 'study', 'focus'].indexOf(d.id) !== -1; }) : matched;
@@ -77,11 +78,35 @@
       fallback: fallback,
       domains: top.map(function (d) { return d.name; }),
       identity: 'אני אדם ' + joinHe(top.map(function (d) { return d.identity; })) + '.',
+      source: 'lib',
       traits: traits.map(function (t) {
-        return { name: t.name, how: t.how, starter: t.starter, habits: habitsFor(t, minutes), domain: t.domain };
+        return { name: t.name, how: t.how, starter: t.starter, habits: t.habits.slice(), stretch: t.stretch };
       }),
       avoid: top[0].avoid,
       first_step: 'היום: ' + stackLine(traits[0])
+    };
+  }
+
+  function txt(v, max) { return typeof v === 'string' ? v.trim().slice(0, max) : ''; }
+  function normalizeAI(d) {
+    if (!d || typeof d !== 'object' || !Array.isArray(d.traits)) return null;
+    var traits = [];
+    d.traits.slice(0, 6).forEach(function (t) {
+      if (!t || !t.starter) return;
+      var name = txt(t.name, 24), how = txt(t.how, 220);
+      var cue = txt(t.starter.cue, 90).replace(/^אחרי\s*ש/, ''), st = txt(t.starter.text, 90).replace(/[.。]$/, '');
+      var habits = Array.isArray(t.habits) ? t.habits.map(function (h) { return txt(h, 120); }).filter(Boolean).slice(0, 3) : [];
+      if (name && how && cue && st && habits.length) traits.push({ name: name, how: how, starter: { cue: cue, text: st }, habits: habits, stretch: txt(t.stretch, 120) });
+    });
+    if (traits.length < 3) return null;
+    return {
+      source: 'ai',
+      fallback: false,
+      domains: Array.isArray(d.domains) ? d.domains.map(function (x) { return txt(x, 20); }).filter(Boolean).slice(0, 3) : [],
+      identity: txt(d.identity, 220) || 'אני אדם שבוחר בעצמו כל יום.',
+      traits: traits,
+      avoid: txt(d.avoid, 240),
+      first_step: txt(d.first_step, 240) || 'היום: ' + stackLine(traits[0])
     };
   }
 
@@ -225,8 +250,17 @@
     refreshAddButtons();
   }
 
-  function render(data, example) {
+  var currentPlan = null, isExample = true;
+  function render(plan, example) {
+    currentPlan = plan; isExample = example;
+    var m = minutes();
+    var data = Object.assign({}, plan, {
+      traits: plan.traits.map(function (t) { return Object.assign({}, t, { habits: habitsFor(t, m) }); })
+    });
     current = data;
+    var src = $('source');
+    src.hidden = example;
+    src.textContent = plan.source === 'ai' ? 'נוצר עם Claude' : 'מהספרייה המקומית';
     $('tag').textContent = example ? 'דוגמה' : 'ההרגלים שלך';
     $('domains').textContent = data.domains.length ? 'תחומים: ' + data.domains.join(' · ') : '';
     $('identity').textContent = data.identity;
@@ -349,29 +383,127 @@
 
   function status(msg, isErr) { var s = $('status'); s.textContent = msg || ''; s.className = isErr ? 'err' : ''; }
 
-  function build(goal, m, scroll) {
-    var data = generate(goal, m);
-    render(data, false);
-    status(data.fallback ? 'לא זיהיתי תחום מוכר, אז הנה תוכנית כללית. נסה להוסיף מילים כמו כושר, לימודים, שינה, כסף או חברים.' : '');
-    save('ah-last', { goal: goal, m: m });
-    var q = '?g=' + encodeURIComponent(goal) + '&t=' + m;
-    try { history.replaceState(null, '', q); } catch (e) {}
+  var CACHE_KEY = 'ah-cache';
+  function cacheGet(goal) { var c = load(CACHE_KEY, {}); return c[goal] || null; }
+  function cachePut(goal, plan) {
+    var c = load(CACHE_KEY, {}), keys = Object.keys(c);
+    c[goal] = plan;
+    keys = Object.keys(c);
+    while (keys.length > 10) { delete c[keys.shift()]; }
+    save(CACHE_KEY, c);
+  }
+
+  function show(goal, plan, scroll) {
+    render(plan, false);
+    save('ah-last', { goal: goal, m: minutes() });
+    try { history.replaceState(null, '', '?g=' + encodeURIComponent(goal) + '&t=' + minutes()); } catch (e) {}
     $('share').hidden = false;
     if (scroll) $('result').scrollIntoView({ block: 'start' });
   }
 
+  function buildLocal(goal, scroll, note) {
+    var plan = generate(goal);
+    show(goal, plan, scroll);
+    status(note || (plan.fallback ? 'לא זיהיתי תחום מוכר, אז הנה תוכנית כללית. חבר את Claude בהגדרות כדי לקבל תוכנית שמתאימה בדיוק למה שכתבת.' : ''), !!note);
+  }
+
+  var ctl = null;
+  function setBusy(b) {
+    $('go').disabled = b;
+    $('stop').hidden = !b;
+    $('result').classList.toggle('busy', b);
+  }
+
+  async function build(goal, scroll) {
+    var ai = window.HabitAI;
+    if (!ai || !ai.configured() || navigator.onLine === false) { buildLocal(goal, scroll); return; }
+    ctl = new AbortController();
+    setBusy(true);
+    status('Claude בונה לך תוכנית אישית. זה לוקח בערך חצי דקה...');
+    try {
+      var raw = await ai.generate(goal, minutes(), ctl.signal);
+      if (raw && raw.unsafe === true) {
+        status(txt(raw.message, 300) || 'כדאי לדבר על זה עם מישהו קרוב או עם איש מקצוע.');
+        return;
+      }
+      var plan = normalizeAI(raw);
+      if (!plan) { status(ai.errorCopy({ code: 'invalid' }), true); return; }
+      cachePut(goal, plan);
+      show(goal, plan, scroll);
+      status('');
+    } catch (e) {
+      var msg = ai.errorCopy(e);
+      if (msg) buildLocal(goal, scroll, msg + ' בינתיים, הנה תוכנית מהספרייה המקומית.');
+      else status('');
+    } finally {
+      setBusy(false);
+      ctl = null;
+    }
+  }
+
   $('build').addEventListener('submit', function (ev) {
     ev.preventDefault();
+    if (ctl) return;
     var goal = $('goal').value.trim();
     if (!goal) { status('כתוב קודם מה אתה רוצה לעשות או להיות.', true); $('goal').focus(); return; }
-    build(goal, minutes(), true);
+    build(goal, true);
   });
+  $('stop').addEventListener('click', function () { if (ctl) ctl.abort(); });
   Array.prototype.forEach.call(document.querySelectorAll('input[name="time"]'), function (r) {
-    r.addEventListener('change', function () { var g = $('goal').value.trim(); if (g && current && $('tag').textContent !== 'דוגמה') build(g, minutes(), false); });
+    r.addEventListener('change', function () {
+      if (!currentPlan) return;
+      var keep = selected;
+      render(currentPlan, isExample);
+      if (keep < current.traits.length) select(keep);
+      if (!isExample) {
+        save('ah-last', { goal: $('goal').value.trim(), m: minutes() });
+        try { history.replaceState(null, '', '?g=' + encodeURIComponent($('goal').value.trim()) + '&t=' + minutes()); } catch (e) {}
+      }
+    });
   });
   Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (c) {
     c.addEventListener('click', function () { $('goal').value = c.getAttribute('data-ex'); $('goal').focus(); });
   });
+
+  /* ---------- AI settings ---------- */
+  function refreshMode() {
+    var ai = window.HabitAI, on = !!(ai && ai.configured());
+    $('modeLabel').textContent = on ? 'Claude מחובר: כל מטרה מקבלת תוכנית אישית' : 'מצב מקומי: ספרייה של 11 תחומים';
+    $('modeDot').classList.toggle('on', on);
+  }
+  function openSettings() {
+    var ai = window.HabitAI;
+    if (!ai) { toast('מצב AI עדיין נטען...'); return; }
+    var s = ai.getSettings();
+    var r = document.querySelector('input[name="aimode"][value="' + s.mode + '"]');
+    if (r) r.checked = true;
+    $('aiKey').value = s.key || '';
+    $('aiProxy').value = s.proxyUrl || '';
+    syncSettingsFields();
+    $('aiErr').textContent = '';
+    $('aiDialog').showModal();
+  }
+  function syncSettingsFields() {
+    var m = (document.querySelector('input[name="aimode"]:checked') || {}).value;
+    $('keyField').hidden = m !== 'key';
+    $('proxyField').hidden = m !== 'proxy';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="aimode"]'), function (r) { r.addEventListener('change', syncSettingsFields); });
+  $('aiOpen').addEventListener('click', openSettings);
+  $('aiCancel').addEventListener('click', function () { $('aiDialog').close(); });
+  $('aiForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var m = (document.querySelector('input[name="aimode"]:checked') || {}).value || 'off';
+    var key = $('aiKey').value.trim(), proxy = $('aiProxy').value.trim();
+    if (m === 'key' && !/^sk-ant-/.test(key)) { $('aiErr').textContent = 'מפתח של Anthropic מתחיל ב־sk-ant-'; $('aiKey').focus(); return; }
+    if (m === 'proxy' && !/^https:\/\//.test(proxy)) { $('aiErr').textContent = 'הכתובת צריכה להתחיל ב־https://'; $('aiProxy').focus(); return; }
+    window.HabitAI.saveSettings({ mode: m, key: m === 'key' ? key : '', proxyUrl: m === 'proxy' ? proxy : '' });
+    $('aiDialog').close();
+    refreshMode();
+    toast(m === 'off' ? 'עברת למצב מקומי' : 'Claude מחובר');
+  });
+  window.addEventListener('habitai-ready', refreshMode);
+  if (window.HabitAI) refreshMode();
 
   $('share').addEventListener('click', function () {
     var url = location.href;
@@ -422,14 +554,14 @@
   renderTracker();
   var params = new URLSearchParams(location.search);
   var g = params.get('g'), tm = params.get('t'), last = load('ah-last', null);
-  if (g) {
-    $('goal').value = g.slice(0, 600); setMinutes(tm || 30);
-    build($('goal').value, minutes(), false);
-  } else if (last && last.goal) {
-    $('goal').value = last.goal; setMinutes(last.m);
-    build(last.goal, minutes(), false);
+  var startGoal = g ? g.slice(0, 600) : (last && last.goal);
+  if (startGoal) {
+    $('goal').value = startGoal; setMinutes(g ? (tm || 30) : last.m);
+    // never spend an API call on page load: use the cached Claude plan or the local library
+    var cached = cacheGet(startGoal);
+    if (cached) show(startGoal, cached, false); else buildLocal(startGoal, false);
   } else {
-    render(generate('בריא מסודר ללמוד חברים ריכוז', 30), true);
+    render(generate('בריא מסודר ללמוד חברים ריכוז'), true);
   }
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {

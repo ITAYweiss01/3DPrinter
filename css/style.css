@@ -219,3 +219,24 @@ textarea:focus, .tr-add input:focus { border-color: var(--accent); outline: none
   body { background: #fff; }
   .panel { box-shadow: none; border-color: #ccc; }
 }
+
+/* AI mode */
+.mode { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin: -4px 0 12px; flex-wrap: wrap; }
+.mode-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.mode-dot.on { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.link { font: inherit; background: none; border: 0; padding: 0; color: var(--p-text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; margin-inline-start: auto; }
+.source { font-size: 12px; color: var(--t-text); background: var(--t-fill); border-radius: 6px; padding: 1px 8px; margin-inline-start: auto; }
+.result.busy { opacity: .55; pointer-events: none; transition: opacity .2s; }
+.btn:disabled { opacity: .55; cursor: default; }
+
+dialog { border: 1px solid var(--border); border-radius: 16px; background: var(--surface); color: var(--fg); padding: 20px; width: min(480px, calc(100% - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+dialog::backdrop { background: rgba(10, 14, 22, .45); }
+dialog h2 { margin-bottom: 4px; }
+dialog input[type="password"], dialog input[type="url"] { width: 100%; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.opts { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.opt { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; cursor: pointer; margin: 0; font-weight: 400; }
+.opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.opt input { margin-top: 5px; accent-color: var(--accent); }
+.opt b { display: block; font-weight: 700; }
+.opt small { display: block; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.err-line { color: var(--danger); font-size: 14px; min-height: 1.2em; margin: 10px 0 0; }

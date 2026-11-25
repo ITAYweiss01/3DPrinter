@@ -1,0 +1,7 @@
+name = "habits-proxy"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+# Comma-separated origins allowed to call the proxy, e.g. "https://itayweiss01.github.io"
+ALLOWED_ORIGINS = ""
