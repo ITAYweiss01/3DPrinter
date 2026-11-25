@@ -98,7 +98,7 @@
     d.traits.forEach(function (t) {
       var tr = el('div', 'trait');
       var p = el('p'); p.appendChild(el('b', null, t.name)); p.appendChild(document.createTextNode(': ' + t.how)); tr.appendChild(p);
-      tr.appendChild(el('p', null, 'שתי דקות: אחרי ש' + t.starter.cue + ', ' + t.starter.text + '.'));
+      tr.appendChild(el('p', null, 'שתי דקות: ' + (/^ב/.test(t.starter.cue) ? t.starter.cue : 'אחרי ש' + t.starter.cue) + ', ' + t.starter.text + '.'));
       var ul = el('ul'); t.habits.forEach(function (x) { ul.appendChild(el('li', null, x)); }); ul.appendChild(el('li', null, 'העמקה: ' + t.stretch));
       tr.appendChild(ul); box.appendChild(tr);
     });
