@@ -4,7 +4,7 @@ import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, extname, relative } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
-const entries = ['index.html', 'admin.html', 'config.js', 'sw.js', 'manifest.webmanifest', 'icon.svg', 'css', 'js'];
+const entries = ['index.html', 'admin.html', 'privacy.html', 'config.js', 'sw.js', 'manifest.webmanifest', 'icon.svg', 'css', 'js'];
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json'
