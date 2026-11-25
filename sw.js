@@ -1,6 +1,6 @@
 /* Offline cache: network first for pages, cache fallback. */
-var CACHE = 'habits-v3';
-var FILES = ['./', 'index.html', 'config.js', 'css/style.css', 'js/data.js', 'js/app.js', 'js/ai.js', 'js/theme.js', 'icon.svg', 'manifest.webmanifest'];
+var CACHE = 'habits-v6';
+var FILES = ['./', 'index.html', 'config.js', 'css/style.css', 'js/data.js', 'js/app.js', 'js/ai.js', 'js/theme.js', 'js/data-extra.js', 'js/todoist.js', 'icon.svg', 'manifest.webmanifest'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
 });

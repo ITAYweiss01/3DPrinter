@@ -69,6 +69,20 @@
     });
   }
 
+  // topic request: sent only when the visitor clicks "send"
+  function suggest(goal) {
+    return fetch(proxy + '/suggest', {
+      method: 'POST', mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ goal: goal })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (r.ok && data && data.ok) return true;
+        throw err((data && data.error) || (r.status === 429 ? 'rate_limited' : 'upstream'));
+      });
+    }, function () { throw err('network'); });
+  }
+
   function errorCopy(e) {
     switch (e && e.code) {
       case 'cancelled': return '';
@@ -80,10 +94,11 @@
       case 'refused': return 'Claude לא יכול לעזור עם הבקשה הזאת. אפשר לנסח אחרת.';
       case 'invalid': return 'התשובה לא הגיעה במבנה הנכון. נסה שוב.';
       case 'network': return 'אין חיבור לשרת. בדוק את האינטרנט.';
+      case 'full': return 'יש כרגע הרבה בקשות שמחכות לאישור. נסה שוב בעוד כמה ימים.';
       default: return 'משהו השתבש. נסה שוב.';
     }
   }
 
-  window.HabitAI = { configured: configured, generate: generate, errorCopy: errorCopy };
+  window.HabitAI = { configured: configured, generate: generate, suggest: suggest, errorCopy: errorCopy };
   if (configured() && siteKey) loadTurnstile();
 })();

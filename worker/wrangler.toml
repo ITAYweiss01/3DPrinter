@@ -10,6 +10,9 @@ compatibility_date = "2026-11-01"
 [vars]
 # Required. Comma-separated origins allowed to call the Worker. Empty = everything blocked.
 ALLOWED_ORIGINS = "https://itayweiss01.github.io"
+GITHUB_REPO = "ITAYweiss01/3DPrinter"
+GITHUB_BASE = "main"
+TODOIST_CLIENT_ID = ""
 
 # Per-IP rate limit: 5 requests per 60 seconds.
 [[ratelimits]]
@@ -19,3 +22,26 @@ namespace_id = "1001"
   [ratelimits.simple]
   limit = 5
   period = 60
+
+# Private storage for topic requests from visitors (not in the public repo).
+# Create it once:  npx wrangler kv namespace create SUGGESTIONS
+# then paste the id it prints here.
+[[kv_namespaces]]
+binding = "SUGGESTIONS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Topic approval opens a PR in this repo.
+# Secrets (never in this file):
+#   npx wrangler secret put ADMIN_TOKEN    # long random password for admin.html (24+ chars)
+#   npx wrangler secret put GITHUB_TOKEN   # fine-grained token: this repo only, Contents + Pull requests: write
+
+# Todoist connection (each visitor connects their own account).
+# 1. Create an app at https://app.todoist.com/app/settings/integrations/app-management
+#    OAuth redirect URL: https://<your-worker>.workers.dev/todoist/callback
+# 2. Put the Client ID below (public), and the secrets with wrangler:
+#      npx wrangler secret put TODOIST_CLIENT_SECRET
+#      npx wrangler secret put TOKEN_KEY     # encrypts stored tokens: openssl rand -base64 32
+# 3. npx wrangler kv namespace create TODOIST   and paste its id below.
+[[kv_namespaces]]
+binding = "TODOIST"
+id = "REPLACE_WITH_TODOIST_KV_NAMESPACE_ID"
