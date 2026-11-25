@@ -138,7 +138,7 @@ function fakeKV() {
   const m = new Map();
   return {
     m,
-    async get(k) { return m.has(k) ? m.get(k) : null; },
+    async get(k, type) { const v = m.has(k) ? m.get(k) : null; return type === 'json' && v != null ? JSON.parse(v) : v; },
     async put(k, v) { m.set(k, v); },
     async delete(k) { m.delete(k); },
     async list({ prefix }) { return { keys: [...m.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name })), list_complete: true }; }
@@ -303,6 +303,16 @@ await t('todoist add creates the project once and skips duplicates', async () =>
   assert.ok(tdState.tasks.every((t) => t.due_string === 'every day' && t.due_lang === 'en' && t.project_id === 'p1'));
   assert.ok(tdState.tasks[0].description.includes('אחרי שאני נכנס למיטה'));
   assert.ok(tdState.authSeen.every((a) => a === 'Bearer TD_ACCESS_TOKEN_xyz'));
+  // the level-up task is added once, due in 21 days, and a second send leaves it alone
+  const up = { content: 'שלב הבא: 10 סקוואטים', note: 'כבר קל?', schedule: { freq: 'levelup' } };
+  r = await add([up]);
+  assert.deepEqual(await r.json(), { added: 1, updated: 0, skipped: 0, project: 'הרגלים' });
+  const ut = tdState.tasks.find((t) => t.content === up.content);
+  assert.equal(ut.due_string, 'in 21 days');
+  ut.due = { string: 'Dec 16' }; // Todoist turns "in 21 days" into a date
+  r = await add([up]);
+  assert.deepEqual(await r.json(), { added: 0, updated: 0, skipped: 1, project: 'הרגלים' });
+  assert.ok(!ut.updatedVia, 'not rescheduled');
 });
 await t('todoist schedules: days and time map to due_string, changes update the task', async () => {
   tdState = { projects: [], tasks: [], tokenCalls: 0, revoked: [], authSeen: [] };
@@ -385,6 +395,33 @@ await t('serves the site with security headers', async () => {
   // source files of the Worker itself are not served
   assert.equal((await worker.fetch(new Request('https://w.example/worker.js'), env)).status, 403);
   assert.equal((await worker.fetch(new Request('https://w.example/wrangler.toml'), env)).status, 403);
+});
+
+
+await t('hit counts only known events, as daily totals, without IP', async () => {
+  const e = kvEnv();
+  const hit = (body, opt = {}) => call(body, { path: '/hit', type: 'text/plain;charset=UTF-8', e, ...opt });
+  assert.equal((await hit({ f: ['v', 's2', 'built', 'td'] })).status, 204);
+  assert.equal((await hit({ f: ['v', 's2', 's2', 'evil', '<script>'] })).status, 204);
+  const keys = [...e.SUGGESTIONS.m.keys()].filter((k) => k.startsWith('stats:'));
+  assert.equal(keys.length, 1);
+  const day = JSON.parse(e.SUGGESTIONS.m.get(keys[0]));
+  assert.deepEqual(day, { v: 2, s2: 2, built: 1, td: 1 });
+  assert.ok(!JSON.stringify([...e.SUGGESTIONS.m.entries()]).includes('10.0.0.'), 'no IP stored');
+  assert.equal((await hit({ f: ['nope'] })).status, 400);
+  assert.equal((await hit('x'.repeat(500))).status, 413);
+  assert.equal((await hit({ f: ['v'] }, { origin: 'https://evil.example' })).status, 403);
+  // reading the totals needs the admin token
+  assert.equal((await admin('/admin/stats', null, e, 'b'.repeat(40))).status, 401);
+  const r = await admin('/admin/stats', null, e);
+  assert.equal(r.status, 200);
+  assert.equal((await r.json()).days[0].counts.v, 2);
+});
+
+await t('level-up task: due in 21 days, never rescheduled on a second send', async () => {
+  const { dueString } = await import('./todoist.js');
+  assert.equal(dueString({ freq: 'levelup', time: '07:00' }), 'in 21 days');
+  assert.equal(dueString({ freq: 'levelup; drop', days: [1] }), 'every day', 'unknown freq is not passed through');
 });
 
 console.log(results.map((n) => 'ok - ' + n).join('\n'));

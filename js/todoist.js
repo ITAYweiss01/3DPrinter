@@ -51,6 +51,7 @@
   // plan item -> Todoist task; a 2-minute habit carries its full sentence as the description
   function toTask(item) {
     var schedule = item && item.schedule ? item.schedule : { freq: 'daily', days: [], time: '' };
+    if (item.levelup) return { content: item.text, note: item.note || '', schedule: { freq: 'levelup' } };
     return { content: item.text, note: item.note ? 'הרגל של שתי דקות: ' + item.note : '', schedule: schedule };
   }
 
@@ -61,6 +62,7 @@
   var DAY_EN = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   function dueString(sc) {
     sc = sc || {};
+    if (sc.freq === 'levelup') return 'in 21 days';
     var days = Array.isArray(sc.days) ? sc.days.filter(function (d, i, a) { return d >= 0 && d <= 6 && a.indexOf(d) === i; }).sort() : [];
     var time = /^([01]\d|2[0-3]):[0-5]\d$/.test(sc.time || '') ? sc.time : '';
     var base = sc.freq === 'days' && days.length && days.length < 7 ? 'every ' + days.map(function (d) { return DAY_EN[d]; }).join(', ') : 'every day';
@@ -106,6 +108,7 @@
         return chain.then(function () {
           var found = by[t.content];
           if (found) {
+            if (t.due === 'in 21 days') { result.skipped++; return; } // one time: don't push its date
             if (found.due && found.due.string === t.due) { result.skipped++; return; }
             return call('tasks/' + encodeURIComponent(found.id), 'POST', { due_string: t.due, due_lang: 'en' }).then(function () { result.updated++; });
           }

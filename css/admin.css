@@ -25,3 +25,13 @@
 .btn.danger { color: var(--danger); }
 .empty-state { text-align: center; color: var(--muted); padding: 32px 0; }
 .err-inline { color: var(--danger); font-size: 14px; margin: 0; }
+
+/* anonymous step counts */
+.stats { margin-top: 20px; }
+.stats .tabs { display: inline-grid; grid-template-columns: repeat(3, auto); margin: 10px 0; }
+.funnel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.funnel li { display: grid; grid-template-columns: 170px 1fr 90px; gap: 10px; align-items: center; font-size: 14px; }
+.f-bar { height: 10px; border-radius: 5px; background: var(--border); overflow: hidden; }
+.f-bar i { display: block; height: 100%; background: var(--accent); }
+.f-n { text-align: end; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .funnel li { grid-template-columns: 1fr 70px; } .f-bar { grid-column: 1 / -1; order: 3; } }

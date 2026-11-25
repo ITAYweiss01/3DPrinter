@@ -496,14 +496,16 @@
       if (!token.trim()) { $('tdStatus').textContent = 'הדבק את הטוקן של Todoist.'; $('tdToken').focus(); return; }
       $('tdSend').disabled = true;
       $('tdStatus').textContent = 'שולח...';
-      TD.directAdd(token, T.habits.map(function (h) { return { text: h.text, note: h.note, schedule: h.schedule }; })).then(function (r) {
+      TD.directAdd(token, planItems()).then(function (r) {
         $('tdToken').value = '';
+        mark('td');
         var parts = [];
         if (r.added) parts.push('נוספו ' + r.added);
         if (r.updated) parts.push('עודכנו ' + r.updated);
         $('tdStatus').textContent = (parts.length ? parts.join(', ') + '. ' : 'הכל כבר היה ב־Todoist. ') +
-          'ההרגלים בפרויקט "הרגלים". בווידג\'ט של Todoist אפשר לבחור את הפרויקט הזה. הטוקן נמחק מהדף.';
+          'ההרגלים בפרויקט "הרגלים". בעוד 3 שבועות תופיע שם גם משימה עם השלב הבא. הטוקן נמחק מהדף.';
         toast('נשלח ל־Todoist');
+        mark('td');
       }, function (e) { $('tdStatus').textContent = e.message; }).then(function () { $('tdSend').disabled = false; });
       token = '';
     }
@@ -527,12 +529,12 @@
       if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; goStep(2); return; }
       $('tdSend').disabled = true;
       $('tdStatus').textContent = 'שולח...';
-      TD.add(T.habits.map(function (h) { return { text: h.text, note: h.note, schedule: h.schedule }; })).then(function (r) {
+      TD.add(planItems()).then(function (r) {
         var parts = [];
         if (r.added) parts.push('נוספו ' + r.added);
         if (r.updated) parts.push('עודכנו ' + r.updated);
         $('tdStatus').textContent = (parts.length ? parts.join(', ') + '. ' : 'הכל כבר היה ב־Todoist. ') +
-          'ההרגלים נמצאים בפרויקט "הרגלים". בווידג\'ט של Todoist אפשר לבחור את הפרויקט הזה.';
+          'ההרגלים נמצאים בפרויקט "הרגלים". בעוד 3 שבועות תופיע שם גם משימה עם השלב הבא.';
         toast('נשלח ל־Todoist');
       }, function (e) { $('tdStatus').textContent = e.message; }).then(function () { $('tdSend').disabled = false; paint(); });
     }
@@ -637,7 +639,7 @@
     save('ah-last', { goal: goal, m: minutes(), answers: answers() });
     shareUrl();
     $('share').hidden = false;
-    if (scroll) goStep(2);
+    if (scroll) { goStep(2); mark('built'); }
   }
 
   function buildLocal(goal, scroll, note) {
@@ -686,6 +688,7 @@
     var goal = composeGoal();
     if (!chosen.length && !$('qFuture').value.trim() && !$('qBlock').value.trim() && !$('goal').value.trim()) {
       status('בחר תחום אחד לפחות, או ענה על אחת השאלות.', true);
+      if (window.HabitSteps && window.HabitSteps.question) window.HabitSteps.question(1);
       var first = document.querySelector('#areas .chip'); if (first) first.focus();
       return;
     }
@@ -807,6 +810,35 @@
     copyText(url, 'הקישור הועתק');
   });
 
+
+  /* ---------- level up: after 3 weeks, the next habit of the same trait ---------- */
+  var LEVELUP_DAYS = 21;
+  function traitByName(name) {
+    var found = null;
+    D.domains.concat([{ traits: D.general }]).forEach(function (d) { d.traits.forEach(function (t) { if (!found && t.name === name) found = t; }); });
+    if (!found && current) current.traits.forEach(function (t) { if (!found && t.name === name) found = t; });
+    return found;
+  }
+  function nextFor(h) {
+    var t = h.trait && traitByName(h.trait);
+    if (!t) return '';
+    var habits = (t.habits || []).map(function (x) { return typeof x === 'string' ? x : x.text; });
+    var ladder = [t.starter && (t.starter.task || t.starter.text)].concat(habits, [t.stretch]).filter(Boolean);
+    var i = ladder.indexOf(h.text);
+    return i !== -1 && i < ladder.length - 1 ? ladder[i + 1] : '';
+  }
+  function levelUps() {
+    return T.habits.map(function (h) {
+      var n = nextFor(h);
+      return n ? { text: 'שלב הבא: ' + n, levelup: true, after: h.text,
+        note: 'ההרגל "' + h.text + '" כבר קורה כמעט מעצמו? אם כן, הוסף את זה. אם עוד לא, דחה את המשימה בשבוע.' } : null;
+    }).filter(Boolean);
+  }
+  function planItems() {
+    return T.habits.map(function (h) { return { text: h.text, note: h.note, schedule: h.schedule }; }).concat(levelUps());
+  }
+  function mark(ev) { if (window.HabitStats) window.HabitStats.mark(ev); }
+
   /* ---------- summary: text, file, PDF ---------- */
   function planLines() {
     return T.habits.map(function (h) { return displayHabit(h) + ' · ' + scheduleText(h.schedule); });
@@ -825,6 +857,7 @@
     if (T.habits.length) {
       out.push('התוכנית שלי');
       planLines().forEach(function (l) { out.push('☐ ' + l); });
+      levelUps().forEach(function (u) { out.push('בעוד 3 שבועות, אם "' + u.after + '" כבר קל: ' + u.text.replace(/^שלב הבא: /, '')); });
       out.push('');
     }
     out.push('הצעד הראשון: ' + d.first_step.replace(/^היום:\s*/, ''));
@@ -845,8 +878,65 @@
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'my-habits-plan.txt';
+    mark('file');
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  });
+
+
+  /* ---------- calendar file (.ics): for people without Todoist ----------
+     Every habit is a repeating event with a reminder at its time; the level-up is a single
+     all-day event in 3 weeks. Opens in the iPhone calendar, Google Calendar and Outlook. */
+  var ICS_DAY = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+  function icsEsc(t) { return String(t).replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+  function icsFold(line) { // lines over 75 bytes continue with a space; a Hebrew letter is 2 bytes
+    var out = [], cur = '', bytes = 0;
+    Array.from(line).forEach(function (ch) {
+      var b = new TextEncoder().encode(ch).length;
+      if (bytes + b > 73) { out.push(cur); cur = ' '; bytes = 1; }
+      cur += ch; bytes += b;
+    });
+    out.push(cur);
+    return out.join('\r\n');
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function ymd(d) { return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); }
+  function toICS() {
+    var now = new Date(), stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+    var L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//habits//HE', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:הרגלים'];
+    T.habits.forEach(function (h, i) {
+      var sc = h.schedule, start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      var weekly = sc.freq === 'days' && sc.days.length && sc.days.length < 7;
+      if (weekly) { while (sc.days.indexOf(start.getDay()) === -1) start.setDate(start.getDate() + 1); }
+      L.push('BEGIN:VEVENT', 'UID:habit-' + h.id + '-' + i + '@habits', 'DTSTAMP:' + stamp);
+      if (sc.time) L.push('DTSTART:' + ymd(start) + 'T' + sc.time.replace(':', '') + '00', 'DURATION:PT10M');
+      else L.push('DTSTART;VALUE=DATE:' + ymd(start));
+      L.push(weekly ? 'RRULE:FREQ=WEEKLY;BYDAY=' + sc.days.map(function (d) { return ICS_DAY[d]; }).join(',') : 'RRULE:FREQ=DAILY');
+      L.push('SUMMARY:' + icsEsc(h.text));
+      if (h.note) L.push('DESCRIPTION:' + icsEsc(h.note));
+      if (sc.time) L.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(h.text), 'TRIGGER:PT0M', 'END:VALARM');
+      L.push('END:VEVENT');
+    });
+    levelUps().forEach(function (u, i) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + LEVELUP_DAYS);
+      var d2 = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+      L.push('BEGIN:VEVENT', 'UID:levelup-' + i + '-' + ymd(now) + '@habits', 'DTSTAMP:' + stamp,
+        'DTSTART;VALUE=DATE:' + ymd(d), 'DTEND;VALUE=DATE:' + ymd(d2),
+        'SUMMARY:' + icsEsc(u.text), 'DESCRIPTION:' + icsEsc(u.note), 'END:VEVENT');
+    });
+    L.push('END:VCALENDAR');
+    return L.map(icsFold).join('\r\n') + '\r\n';
+  }
+  $('ics').addEventListener('click', function () {
+    if (!T.habits.length) { $('icsStatus').textContent = 'קודם בחר הרגלים (שלב 2).'; goStep(2); return; }
+    var blob = new Blob([toICS()], { type: 'text/calendar;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'my-habits.ics';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    $('icsStatus').textContent = 'הקובץ ירד. פותחים אותו, והיומן ישאל אם להוסיף את האירועים.';
+    mark('ics');
   });
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
@@ -882,6 +972,7 @@
         ul.appendChild(li);
       });
       box.appendChild(ul);
+      levelUps().forEach(function (u) { box.appendChild(el('p', 'ps-next', 'בעוד 3 שבועות, אם "' + u.after + '" כבר קל: ' + u.text.replace(/^שלב הבא: /, ''))); });
     }
 
     var two = el('div', 'ps-two');
@@ -897,6 +988,7 @@
     box.appendChild(el('p', 'ps-foot', 'בהשראת Atomic Habits מאת ג\'יימס קליר'));
   }
   $('pdf').addEventListener('click', function () {
+    mark('file');
     buildPrintSummary();
     window.print();
   });
