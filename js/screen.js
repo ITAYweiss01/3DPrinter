@@ -120,11 +120,11 @@
     }
     Array.prototype.forEach.call(lines, function (l, i) {
       // each moment gets time to be read before it is ticked
-      later(800 + i * 1900, function () { l.classList.add('in'); });
-      later(1900 + i * 1900, function () { l.classList.add('on'); });
+      later(900 + i * 2500, function () { l.classList.add('in'); });
+      later(2200 + i * 2500, function () { l.classList.add('on'); });
     });
-    later(7000, showB);
-    later(8400, function () { clean(2800); });
+    later(8800, showB);
+    later(10600, function () { clean(3800); });
   }
   function showB() {
     $('sceneA').hidden = true; $('sceneB').hidden = false;
