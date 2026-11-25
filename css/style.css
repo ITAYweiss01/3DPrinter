@@ -216,7 +216,7 @@ textarea:focus, .tr-add input:focus { border-color: var(--accent); outline: none
 .foot { font-size: 13px; color: var(--muted); padding-block: 0 calc(32px + env(safe-area-inset-bottom, 0px)); }
 
 .toast {
-  position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); inset-inline: 0; margin: 0 auto; width: max-content; max-width: calc(100% - 32px);
+  position: fixed; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); inset-inline: 0; margin: 0 auto; width: max-content; max-width: calc(100% - 32px);
   background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: 10px; font-size: 14px; z-index: 30;
   animation: pop .2s ease both;
 }
@@ -559,3 +559,30 @@ mark { background: linear-gradient(var(--hl), var(--hl)) no-repeat right 70% / 1
 .ph-app { z-index: 1; }
 .screen-h { margin-top: 20px; font-size: 17px; }
 .screen-steps { gap: 8px; }
+
+/* Wizard: one step per screen */
+[data-step]:not(.cur) { display: none !important; }
+.stepper { list-style: none; display: flex; gap: 2px; margin: 0 auto; padding: 0; align-items: center; }
+.stepper li { display: flex; align-items: center; }
+.stepper li + li::before { content: ''; width: 10px; height: 2px; background: var(--border); margin-inline: 2px; }
+.stepper button {
+  font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0; cursor: pointer;
+  display: flex; align-items: center; gap: 5px; padding: 4px 4px; border-radius: 8px; white-space: nowrap;
+}
+.stepper .n {
+  width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 12px;
+  border: 1.5px solid var(--line); background: var(--surface);
+}
+.stepper button.done .n { background: var(--accent-soft); border-color: var(--accent); color: var(--t-text); }
+.stepper button[aria-current="step"] { color: var(--fg); font-weight: 700; }
+.stepper button[aria-current="step"] .n { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+@media (max-width: 520px) { .stepper button:not([aria-current]) .l { display: none; } .stepper li + li::before { width: 8px; } }
+.stepper .badge { margin-inline-start: 2px; }
+.step-nav { display: flex; justify-content: space-between; gap: 10px; position: sticky; bottom: 0; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--bg) 30%); z-index: 5; }
+.step-nav .btn.primary { margin-inline-start: auto; }
+.link.inline { margin: 0; font-size: inherit; }
+details.more { margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 12px; }
+details.more summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+details.more[open] summary { margin-bottom: 8px; }
+.phone-steps { gap: 8px; }
+#resultNote:empty { display: none; }

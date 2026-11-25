@@ -20,6 +20,7 @@
     } else {
       lastEvent = m[1] === 'denied' ? 'denied' : 'error';
     }
+    window.HABIT_TODOIST_RETURN = true;
     try { history.replaceState(null, '', location.pathname + location.search + '#tracker'); } catch (e) {}
   }
 

@@ -491,7 +491,7 @@
     function send(ev) {
       if (ev) ev.preventDefault();
       if (TD.available()) return; // OAuth mode took over
-      if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; location.hash = '#plan'; return; }
+      if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; goStep(2); return; }
       var token = $('tdToken').value;
       if (!token.trim()) { $('tdStatus').textContent = 'הדבק את הטוקן של Todoist.'; $('tdToken').focus(); return; }
       $('tdSend').disabled = true;
@@ -524,7 +524,7 @@
       $('tdTitle').textContent = on ? 'Todoist מחובר' : 'המשך ב־Todoist';
     }
     function send() {
-      if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; location.hash = '#plan'; return; }
+      if (!T.habits.length) { $('tdStatus').textContent = 'קודם הוסף הרגלים לתוכנית (שלב 2).'; goStep(2); return; }
       $('tdSend').disabled = true;
       $('tdStatus').textContent = 'שולח...';
       TD.add(T.habits.map(function (h) { return { text: h.text, note: h.note, schedule: h.schedule }; })).then(function (r) {
@@ -578,7 +578,11 @@
   function minutes() { var c = document.querySelector('input[name="time"]:checked'); return c ? +c.value : 30; }
   function setMinutes(m) { var c = document.querySelector('input[name="time"][value="' + m + '"]'); if (c) c.checked = true; }
 
-  function status(msg, isErr) { var s = $('status'); s.textContent = msg || ''; s.className = isErr ? 'err' : ''; }
+  // shown in step 1 and, after building, at the top of step 2
+  function status(msg, isErr) {
+    [$('status'), $('resultNote')].forEach(function (s) { s.textContent = msg || ''; s.className = s.id === 'resultNote' ? 'note' : isErr ? 'err' : ''; });
+  }
+  function goStep(n) { if (window.HabitSteps) window.HabitSteps.go(n); }
 
   var CACHE_KEY = 'ah-cache';
   function cacheGet(goal) { var c = load(CACHE_KEY, {}); return c[goal] || null; }
@@ -633,7 +637,7 @@
     save('ah-last', { goal: goal, m: minutes(), answers: answers() });
     shareUrl();
     $('share').hidden = false;
-    if (scroll) $('result').scrollIntoView({ block: 'start' });
+    if (scroll) goStep(2);
   }
 
   function buildLocal(goal, scroll, note) {
