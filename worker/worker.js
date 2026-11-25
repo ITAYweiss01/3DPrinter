@@ -16,6 +16,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { handleSuggest, handleAdmin, isAdmin } from './suggestions.js';
+import { handleTodoistNav, handleTodoistApi } from './todoist.js';
 
 const MODEL = 'claude-opus-5-5';
 const MAX_BODY = 4000;      // bytes
@@ -152,6 +153,16 @@ function errorCode(e) {
 /* ---------- handler ---------- */
 export default {
   async fetch(req, env) {
+    // Todoist sign-in is a page navigation (no Origin header). It is protected by a
+    // single-use state and an allowlisted return address instead.
+    const navUrl = new URL(req.url);
+    if (req.method === 'GET' && (navUrl.pathname === '/todoist/start' || navUrl.pathname === '/todoist/callback')) {
+      const ip0 = req.headers.get('CF-Connecting-IP') || 'unknown';
+      if (await rateLimited(env, 'todoist-nav:' + ip0)) return new Response('Too many attempts. Try again in a minute.', { status: 429 });
+      try { return await handleTodoistNav(navUrl, env); }
+      catch (e) { console.error('todoist nav error', e && e.code); return new Response('Something went wrong. Go back to the site and try again.', { status: 500 }); }
+    }
+
     const origin = req.headers.get('Origin') || '';
     const origins = allowedOrigins(env);
     // Fail closed: no allowlist configured means nobody is allowed.
@@ -186,6 +197,23 @@ export default {
       } catch (e) {
         console.error('admin error', path, e && e.status, e && e.name);
         return reply(502, { error: 'upstream' }, corsH);
+      }
+    }
+
+    /* ---- Todoist: add habits / status / disconnect ---- */
+    if (req.method === 'POST' && path.startsWith('/todoist/')) {
+      if (!(req.headers.get('Content-Type') || '').startsWith('application/json')) return reply(415, { error: 'bad_input' }, corsH);
+      if (await rateLimited(env, 'todoist:' + ip)) return reply(429, { error: 'rate_limited' }, { ...corsH, 'Retry-After': '60' });
+      const raw = await req.text();
+      if (raw.length > 12000) return reply(413, { error: 'bad_input' }, corsH);
+      let tbody;
+      try { tbody = JSON.parse(raw); } catch { return reply(400, { error: 'bad_input' }, corsH); }
+      try {
+        const [status, out] = await handleTodoistApi(path, tbody, env);
+        return reply(status, out, corsH);
+      } catch (e) {
+        console.error('todoist api error', e && e.code);
+        return reply(e && e.code === 'not_configured' ? 500 : 502, { error: e && e.code === 'not_configured' ? 'not_configured' : 'upstream' }, corsH);
       }
     }
 

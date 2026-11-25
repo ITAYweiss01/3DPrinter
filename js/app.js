@@ -163,6 +163,10 @@
     if (hasHabit(text)) { removeHabit(T.habits.filter(function (h) { return h.text === text; })[0].id); return false; }
     T.habits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, trait: trait || '', created: key(new Date()), done: {} });
     saveT(); renderTracker(); refreshAddButtons();
+    var TD = window.HabitTodoist;
+    if (TD && TD.available() && TD.connected()) {
+      TD.add([text]).then(function (r) { if (r.added) toast('נוסף גם ל־Todoist'); }, function (e) { toast(e.message); });
+    }
     return true;
   }
   function removeHabit(id) {
@@ -416,6 +420,51 @@
     $('newHabit').value = '';
     toast('נוסף למעקב');
   });
+
+  /* ---------- Todoist ---------- */
+  (function () {
+    var TD = window.HabitTodoist;
+    if (!TD || !TD.available()) return;
+    $('todoistBox').hidden = false;
+    function paint() {
+      var on = TD.connected();
+      $('tdConnect').hidden = on;
+      $('tdSync').hidden = !on;
+      $('tdDisconnect').hidden = !on;
+      $('tdTitle').textContent = on ? 'Todoist מחובר' : "ההרגלים שלך בווידג'ט של Todoist";
+      $('tdSub').textContent = on
+        ? 'כל הרגל חדש שתוסיף כאן נכנס אוטומטית לפרויקט "הרגלים" כמשימה יומית. בווידג\'ט של Todoist בחר את הפרויקט "הרגלים".'
+        : 'מחברים פעם אחת, וכל הרגל שמוסיפים כאן נכנס לפרויקט "הרגלים" כמשימה יומית. אפשר לסמן אותו ישר מהמסך הבית.';
+    }
+    TD.onChange(paint);
+    paint();
+    var ev = TD.lastEvent();
+    if (ev === 'connected') {
+      toast('Todoist מחובר');
+      if (T.habits.length) TD.add(T.habits.map(function (h) { return h.text; })).then(function (r) {
+        toast('נשלחו ' + r.added + ' הרגלים ל־Todoist');
+      }, function (e) { toast(e.message); });
+    } else if (ev === 'denied') toast('החיבור ל־Todoist בוטל');
+    else if (ev === 'error') toast('החיבור ל־Todoist נכשל. נסה שוב.');
+    else TD.check().then(paint);
+    $('tdConnect').addEventListener('click', function () { TD.connect(); });
+    $('tdSync').addEventListener('click', function () {
+      if (!T.habits.length) { toast('אין עדיין הרגלים במעקב'); return; }
+      $('tdSync').disabled = true;
+      TD.add(T.habits.map(function (h) { return h.text; })).then(function (r) {
+        toast(r.added ? 'נשלחו ' + r.added + ' הרגלים ל־Todoist' : 'כל ההרגלים כבר נמצאים ב־Todoist');
+      }, function (e) { toast(e.message); }).then(function () { $('tdSync').disabled = false; paint(); });
+    });
+    $('tdDisconnect').addEventListener('click', function () {
+      if (!$('tdDisconnect').classList.contains('armed')) {
+        $('tdDisconnect').classList.add('armed'); $('tdDisconnect').textContent = 'לנתק? לחץ שוב';
+        setTimeout(function () { $('tdDisconnect').classList.remove('armed'); $('tdDisconnect').textContent = 'נתק'; }, 3000);
+        return;
+      }
+      $('tdDisconnect').classList.remove('armed'); $('tdDisconnect').textContent = 'נתק';
+      TD.disconnect().then(function () { toast('Todoist נותק. המשימות שכבר נוספו נשארות אצלך.'); });
+    });
+  })();
 
   /* ---------- laws ---------- */
   D.laws.forEach(function (l) {

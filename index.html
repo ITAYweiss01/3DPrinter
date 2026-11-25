@@ -139,6 +139,19 @@
       <div class="tr-days" id="trDays" aria-hidden="true"></div>
       <ul id="trList" class="tr-list"></ul>
 
+      <div class="todoist" id="todoistBox" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="td-icon"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7.5 12.5l3 3 6-7"/></svg>
+        <div class="td-text">
+          <strong id="tdTitle">ההרגלים שלך בווידג'ט של Todoist</strong>
+          <span class="muted" id="tdSub">מחברים פעם אחת, וכל הרגל שמוסיפים כאן נכנס לפרויקט "הרגלים" כמשימה יומית. אפשר לסמן אותו ישר מהמסך הבית.</span>
+        </div>
+        <div class="td-actions">
+          <button type="button" class="btn small primary" id="tdConnect">חבר את Todoist</button>
+          <button type="button" class="btn small" id="tdSync" hidden>שלח את כל ההרגלים</button>
+          <button type="button" class="btn small ghost" id="tdDisconnect" hidden>נתק</button>
+        </div>
+      </div>
+
       <form class="tr-add" id="trAdd" autocomplete="off">
         <label for="newHabit" class="sr">הרגל חדש</label>
         <input id="newHabit" maxlength="80" placeholder="אחרי ש... אני... (הרגל משלך)">
@@ -162,6 +175,7 @@
   <script src="js/data.js"></script>
   <script src="js/data-extra.js"></script>
   <script src="js/ai.js"></script>
+  <script src="js/todoist.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

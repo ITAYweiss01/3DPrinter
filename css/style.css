@@ -245,3 +245,11 @@ dialog input[type="password"], dialog input[type="url"] { width: 100%; font: inh
 .tr-del.armed { opacity: 1; color: var(--danger); font-size: 12px; font-weight: 700; white-space: nowrap; }
 .suggest { border-style: dashed; }
 .suggest .actions { margin-top: 10px; }
+
+/* Todoist */
+.todoist { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; margin-top: 14px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+.td-icon { flex: none; width: 28px; height: 28px; fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.td-icon path { fill: none; }
+.td-text { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.td-text .muted { font-size: 14px; margin: 0; }
+.td-actions { display: flex; flex-wrap: wrap; gap: 6px; }

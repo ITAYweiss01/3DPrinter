@@ -11,6 +11,7 @@ let upstreamStatus = 200;
 let ghFiles = {}; let ghCalls = []; let nextModelText = null;
 globalThis.fetch = async (url, init = {}) => {
   if (String(url).startsWith('https://api.github.com/')) return githubStub(String(url), init);
+  if (String(url).includes('todoist.com/')) return todoistStub(String(url), init);
   const req = new Request(url, init);
   upstream.push({ url: req.url, headers: Object.fromEntries(req.headers), body: init.body ? JSON.parse(init.body) : null });
   if (upstreamStatus !== 200) {
@@ -18,6 +19,24 @@ globalThis.fetch = async (url, init = {}) => {
   }
   return new Response(JSON.stringify({ id: 'msg_1', type: 'message', role: 'assistant', model: 'claude-opus-5-5', stop_reason: 'end_turn', stop_details: null, usage: { input_tokens: 1, output_tokens: 1 }, content: [{ type: 'text', text: nextModelText || JSON.stringify(plan) }] }), { status: 200, headers: { 'content-type': 'application/json' } });
 };
+let tdState = { projects: [], tasks: [], tokenCalls: 0, revoked: [], authSeen: [] };
+function todoistStub(url, init) {
+  const u = new URL(url); const method = init.method || 'GET'; const h = init.headers || {};
+  const j = (st, o) => new Response(JSON.stringify(o), { status: st, headers: { 'content-type': 'application/json' } });
+  if (u.href === 'https://todoist.com/oauth/access_token') {
+    tdState.tokenCalls++;
+    const b = JSON.parse(init.body);
+    return b.code === 'good-code' && b.client_secret === 'td-secret' ? j(200, { access_token: 'TD_ACCESS_TOKEN_xyz', token_type: 'Bearer' }) : j(400, { error: 'bad' });
+  }
+  if (u.pathname === '/api/v1/revoke') { tdState.revoked.push(JSON.parse(init.body).token); return j(200, {}); }
+  tdState.authSeen.push(h.Authorization);
+  if (h.Authorization !== 'Bearer TD_ACCESS_TOKEN_xyz') return j(401, {});
+  if (u.pathname === '/api/v1/projects' && method === 'GET') return j(200, { results: tdState.projects, next_cursor: null });
+  if (u.pathname === '/api/v1/projects' && method === 'POST') { const p = { id: 'p1', ...JSON.parse(init.body) }; tdState.projects.push(p); return j(200, p); }
+  if (u.pathname === '/api/v1/tasks' && method === 'GET') return j(200, { results: tdState.tasks.filter((t) => t.project_id === u.searchParams.get('project_id')), next_cursor: null });
+  if (u.pathname === '/api/v1/tasks' && method === 'POST') { const t = { id: 't' + tdState.tasks.length, ...JSON.parse(init.body) }; tdState.tasks.push(t); return j(200, t); }
+  return j(404, {});
+}
 function githubStub(url, init) {
   const u = new URL(url); const method = init.method || 'GET';
   ghCalls.push({ method, path: u.pathname, auth: (init.headers || {}).Authorization, body: init.body ? JSON.parse(init.body) : null });
@@ -119,6 +138,7 @@ function fakeKV() {
     m,
     async get(k) { return m.has(k) ? m.get(k) : null; },
     async put(k, v) { m.set(k, v); },
+    async delete(k) { m.delete(k); },
     async list({ prefix }) { return { keys: [...m.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name })), list_complete: true }; }
   };
 }
@@ -217,6 +237,91 @@ await t('reject marks the request', async () => {
   const id = JSON.parse([...e.SUGGESTIONS.m.values()][0]).id;
   const out = await (await admin('/admin/reject', { id }, e)).json();
   assert.equal(out.item.status, 'rejected');
+});
+
+/* ---------- Todoist ---------- */
+const TOKEN_KEY_B64 = Buffer.from(new Uint8Array(32).fill(7)).toString('base64');
+const tdEnv = () => ({ ...env, TODOIST: fakeKV(), TODOIST_CLIENT_ID: 'td-client', TODOIST_CLIENT_SECRET: 'td-secret', TOKEN_KEY: TOKEN_KEY_B64 });
+function nav(path, e) {
+  return worker.fetch(new Request('https://w.example' + path, { headers: { 'CF-Connecting-IP': '10.2.0.' + (ip++) } }), e);
+}
+async function connect(e) {
+  const r = await nav('/todoist/start?return=' + encodeURIComponent(ORIGIN + '/3DPrinter/?x=1#y'), e);
+  const loc = new URL(r.headers.get('Location'));
+  const state = loc.searchParams.get('state');
+  const cb = await nav('/todoist/callback?code=good-code&state=' + state, e);
+  return { start: r, loc, state, cb };
+}
+
+await t('todoist start redirects to Todoist with a single-use state', async () => {
+  tdState = { projects: [], tasks: [], tokenCalls: 0, revoked: [], authSeen: [] };
+  const e = tdEnv();
+  const { start, loc, state, cb } = await connect(e);
+  assert.equal(start.status, 302);
+  assert.equal(loc.origin + loc.pathname, 'https://todoist.com/oauth/authorize');
+  assert.equal(loc.searchParams.get('client_id'), 'td-client');
+  assert.equal(loc.searchParams.get('scope'), 'data:read_write');
+  assert.equal(cb.status, 302);
+  const back = cb.headers.get('Location');
+  assert.match(back, /^https:\/\/itayweiss01\.github\.io\/3DPrinter\/#todoist-[0-9a-f]{64}$/, 'returns to the site path without query');
+  // state cannot be reused
+  assert.equal((await nav('/todoist/callback?code=good-code&state=' + state, e)).status, 400);
+});
+await t('todoist start refuses return addresses outside the allowlist', async () => {
+  const e = tdEnv();
+  assert.equal((await nav('/todoist/start?return=' + encodeURIComponent('https://evil.example/'), e)).status, 400);
+  assert.equal((await nav('/todoist/start', e)).status, 400);
+});
+await t('todoist callback rejects unknown state and handles denial', async () => {
+  const e = tdEnv();
+  assert.equal((await nav('/todoist/callback?code=good-code&state=' + 'a'.repeat(48), e)).status, 400);
+  const r = await nav('/todoist/start?return=' + encodeURIComponent(ORIGIN + '/'), e);
+  const state = new URL(r.headers.get('Location')).searchParams.get('state');
+  const d = await nav('/todoist/callback?error=access_denied&state=' + state, e);
+  assert.equal(d.headers.get('Location'), ORIGIN + '/#todoist-denied');
+});
+await t('todoist token is stored encrypted, never sent to the browser', async () => {
+  const e = tdEnv();
+  const { cb } = await connect(e);
+  assert.ok(!cb.headers.get('Location').includes('TD_ACCESS_TOKEN'));
+  const stored = [...e.TODOIST.m.entries()].filter(([k]) => k.startsWith('ts:'));
+  assert.equal(stored.length, 1);
+  assert.ok(!stored[0][1].includes('TD_ACCESS_TOKEN'), 'token stored in plain text');
+});
+await t('todoist add creates the project once and skips duplicates', async () => {
+  tdState = { projects: [], tasks: [], tokenCalls: 0, revoked: [], authSeen: [] };
+  const e = tdEnv();
+  const sid = (await connect(e)).cb.headers.get('Location').split('#todoist-')[1];
+  const add = (habits) => call({ sid, habits }, { path: '/todoist/add', e });
+  let r = await add([{ content: 'קורא עמוד אחד', note: 'אחרי שאני נכנס למיטה' }, { content: '5 סקוואטים' }]);
+  assert.equal(r.status, 200); assert.deepEqual(await r.json(), { added: 2, skipped: 0, project: 'הרגלים' });
+  r = await add([{ content: 'קורא עמוד אחד' }, { content: 'כוס מים' }]);
+  assert.deepEqual(await r.json(), { added: 1, skipped: 1, project: 'הרגלים' });
+  assert.equal(tdState.projects.length, 1);
+  assert.ok(tdState.tasks.every((t) => t.due_string === 'every day' && t.project_id === 'p1'));
+  assert.ok(tdState.tasks[0].description.includes('אחרי שאני נכנס למיטה'));
+  assert.ok(tdState.authSeen.every((a) => a === 'Bearer TD_ACCESS_TOKEN_xyz'));
+});
+await t('todoist calls need a valid connection id and the site origin', async () => {
+  const e = tdEnv();
+  assert.equal((await call({ sid: 'f'.repeat(64), habits: [{ content: 'x' }] }, { path: '/todoist/add', e })).status, 401);
+  assert.equal((await call({ sid: 'not-hex', habits: [{ content: 'x' }] }, { path: '/todoist/add', e })).status, 401);
+  assert.equal((await call({ sid: 'f'.repeat(64), habits: [] }, { path: '/todoist/add', e, origin: 'https://evil.example' })).status, 403);
+  const st = await (await call({ sid: 'f'.repeat(64) }, { path: '/todoist/status', e })).json();
+  assert.equal(st.connected, false);
+});
+await t('todoist disconnect revokes the token and deletes it', async () => {
+  tdState = { projects: [], tasks: [], tokenCalls: 0, revoked: [], authSeen: [] };
+  const e = tdEnv();
+  const sid = (await connect(e)).cb.headers.get('Location').split('#todoist-')[1];
+  assert.equal((await (await call({ sid }, { path: '/todoist/status', e })).json()).connected, true);
+  await call({ sid }, { path: '/todoist/disconnect', e });
+  assert.deepEqual(tdState.revoked, ['TD_ACCESS_TOKEN_xyz']);
+  assert.equal((await (await call({ sid }, { path: '/todoist/status', e })).json()).connected, false);
+  assert.equal([...e.TODOIST.m.keys()].filter((k) => k.startsWith('ts:')).length, 0);
+});
+await t('todoist without configuration fails safely', async () => {
+  assert.equal((await nav('/todoist/start?return=' + encodeURIComponent(ORIGIN + '/'), env)).status, 500);
 });
 
 console.log(results.map((n) => 'ok - ' + n).join('\n'));

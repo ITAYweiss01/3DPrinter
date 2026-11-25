@@ -51,6 +51,29 @@ window.HABITS_CONFIG = { proxyUrl: 'https://habits-proxy.<you>.workers.dev', tur
 
 בדיקות האבטחה של ה־Worker: `cd worker && npm test`.
 
+## חיבור ל־Todoist (ווידג'ט במסך הבית)
+
+כל משתמש יכול ללחוץ **חבר את Todoist** במעקב, ולהתחבר עם החשבון שלו.
+מאותו רגע כל הרגל שמוסיפים למעקב נכנס אוטומטית לפרויקט **"הרגלים"** ב־Todoist כמשימה יומית חוזרת,
+עם ההרגל של שתי דקות בתיאור. אפשר להוסיף ווידג'ט של Todoist למסך הבית, לבחור בו את הפרויקט "הרגלים", ולסמן משם.
+אין כפילויות: הרגל שכבר קיים בפרויקט לא נוסף שוב. **נתק** מבטל את ההרשאה אצל Todoist.
+
+הגדרה חד־פעמית:
+
+1. יוצרים אפליקציה ב־Todoist: https://app.todoist.com/app/settings/integrations/app-management
+   - OAuth redirect URL: `https://<ה־Worker שלך>.workers.dev/todoist/callback`
+2. ב־`worker/wrangler.toml` ממלאים `TODOIST_CLIENT_ID` (ציבורי), ואז:
+
+```bash
+cd worker
+npx wrangler kv namespace create TODOIST       # מעתיקים את ה־id ל־wrangler.toml
+npx wrangler secret put TODOIST_CLIENT_SECRET
+npx wrangler secret put TOKEN_KEY              # מצפין את הטוקנים: openssl rand -base64 32
+npx wrangler deploy
+```
+
+סימון של משימה ב־Todoist לא מסמן אותה במעקב באתר (הכיוון הוא מהאתר ל־Todoist).
+
 ## בקשות לנושאים חדשים
 
 כשמישהו כותב מטרה שלא מתאימה לאף נושא שמור, האתר מציע לו **לשלוח בקשה לנושא חדש**. שום דבר לא נשלח בלי שהוא לוחץ.
@@ -98,11 +121,12 @@ css/style.css         עיצוב (בהיר/כהה, RTL, מותאם לנייד)
 js/data.js            ספריית התחומים, התכונות וההרגלים
 js/app.js             המחולל המקומי, המפה והמעקב
 js/ai.js              מצב Claude ובקשות לנושאים: שולח ל־Worker (בלי מפתח)
+js/todoist.js         חיבור ל־Todoist: כפתור חיבור ושליחה אוטומטית של הרגלים
 js/data-extra.js      נושאים שאושרו מבקשות של מבקרים (מתעדכן דרך PR)
 admin.html, js/admin.js  דף ניהול: אישור או דחייה של בקשות לנושאים
 js/theme.js           מצב בהיר/כהה (בלי סקריפט inline, בגלל ה־CSP)
 config.js             כתובת ה־Worker (ציבורי, בלי מפתחות)
-worker/               Cloudflare Worker: המפתח, הפרומפט, הגבלת קצב, בקשות לנושאים ובדיקות אבטחה
+worker/               Cloudflare Worker: המפתח, הפרומפט, הגבלת קצב, בקשות לנושאים, Todoist ובדיקות אבטחה
 SECURITY.md           מדיניות האבטחה ומה לעשות אם מפתח דלף
 sw.js                 מטמון לעבודה בלי אינטרנט
 manifest.webmanifest  התקנה כאפליקציה
