@@ -51,7 +51,7 @@
   function signOut() {
     token = '';
     try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) {}
-    $('board').hidden = true; $('signIn').hidden = false; $('signOut').hidden = true;
+    $('board').hidden = true; $('stats').hidden = true; $('signIn').hidden = false; $('signOut').hidden = true;
   }
   $('signOut').addEventListener('click', signOut);
   $('signInForm').addEventListener('submit', function (ev) {
@@ -66,7 +66,43 @@
     }, function (e) { $('signInErr').textContent = e.message; });
   });
 
+  /* ---------- anonymous step counts ---------- */
+  var statDays = [], range = 7;
+  var FUNNEL = [
+    ['v', 'נכנסו לאתר'], ['q2', 'ענו על השאלה הראשונה'], ['q5', 'הגיעו לשאלה האחרונה'], ['built', 'בנו תוכנית'],
+    ['s3', 'הגיעו ל"מתי"'], ['s4', 'הגיעו לשליחה'], ['td', 'שלחו ל־Todoist'], ['ics', 'הורידו קובץ יומן'],
+    ['file', 'שמרו סיכום'], ['s5', 'הגיעו ל"סדר את הטלפון"']
+  ];
+  function loadStats() {
+    return api('/admin/stats').then(function (data) { statDays = data.days || []; $('stats').hidden = false; renderStats(); }, function () {});
+  }
+  function renderStats() {
+    var since = new Date(Date.now() - (range - 1) * 864e5).toISOString().slice(0, 10);
+    var sum = {};
+    statDays.filter(function (d) { return d.date >= since; }).forEach(function (d) {
+      Object.keys(d.counts).forEach(function (k) { sum[k] = (sum[k] || 0) + d.counts[k]; });
+    });
+    var top = sum.v || 0, box = $('funnel');
+    box.textContent = '';
+    FUNNEL.forEach(function (f) {
+      var n = sum[f[0]] || 0, pct = top ? Math.round(n / top * 100) : 0;
+      var li = el('li');
+      li.appendChild(el('span', 'f-label', f[1]));
+      var bar = el('span', 'f-bar'); var fill = el('i'); fill.style.width = pct + '%'; bar.appendChild(fill); li.appendChild(bar);
+      li.appendChild(el('span', 'f-n', n + (top ? ' · ' + pct + '%' : '')));
+      box.appendChild(li);
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#statsRange button'), function (b) {
+    b.addEventListener('click', function () {
+      range = +b.getAttribute('data-days');
+      Array.prototype.forEach.call(document.querySelectorAll('#statsRange button'), function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+      renderStats();
+    });
+  });
+
   function loadItems() {
+    loadStats();
     status('טוען...');
     return api('/admin/suggestions').then(function (data) {
       items = data.items || [];

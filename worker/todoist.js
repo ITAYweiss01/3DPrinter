@@ -30,10 +30,13 @@ const MAX_HABITS = 20;
  *   { freq: 'daily' }                          -> "every day"
  *   { freq: 'days', days: [0, 3] }             -> "every sun, wed"   (0 = Sunday)
  *   { ..., time: '07:30' }                     -> "... at 07:30"
+ *   { freq: 'levelup' }                        -> "in 21 days"     (one time: "ready for the next step?")
  */
+export const LEVELUP_DUE = 'in 21 days';
 const DAY_EN = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 export function dueString(schedule) {
   const sc = schedule && typeof schedule === 'object' ? schedule : {};
+  if (sc.freq === 'levelup') return LEVELUP_DUE;
   const days = Array.isArray(sc.days)
     ? [...new Set(sc.days.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort()
     : [];
@@ -195,6 +198,8 @@ export async function handleTodoistApi(path, body, env) {
       for (const h of habits) {
         const found = byContent.get(h.content);
         if (found) {
+          // a level-up task is one time: sending again must not push its date
+          if (h.due === LEVELUP_DUE) { skipped++; continue; }
           // already there: keep the task (and its history), only update the schedule if it changed
           if (!found.due || found.due.string !== h.due) {
             await td(token, 'tasks/' + encodeURIComponent(found.id), { method: 'POST', body: JSON.stringify({ due_string: h.due, due_lang: 'en' }) });

@@ -587,3 +587,19 @@ details.more summary { cursor: pointer; font-weight: 700; color: var(--accent); 
 details.more[open] summary { margin-bottom: 8px; }
 .phone-steps { gap: 8px; }
 #resultNote:empty { display: none; }
+
+/* Step 1: one question per screen */
+#build [data-q]:not(.qcur) { display: none !important; }
+#build .q.qcur > label, #build .q.qcur > legend { font-size: 19px; font-weight: 700; font-family: var(--font-hand); }
+.q-nav { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+.q-count { font-size: 13px; color: var(--muted); }
+.q-dots { display: flex; gap: 4px; }
+.q-dots i { width: 12px; height: 4px; border-radius: 2px; background: var(--border); }
+.q-dots i.on { background: var(--accent); }
+.q-nav #qNext { min-width: 96px; }
+.q-nav #qBack { margin-inline-start: auto; }
+.q-nav #qBack[hidden] + #qNext { margin-inline-start: auto; }
+.q-count { white-space: nowrap; }
+.q-nav #qBack { order: 3; }
+.q-nav #qNext { order: 4; }
+.ps-next { margin: 6px 0 0; font-size: 13px; }

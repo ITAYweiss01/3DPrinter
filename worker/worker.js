@@ -155,6 +155,9 @@ const SITE_CSP = "default-src 'self'; script-src 'self' https://challenges.cloud
   "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.workers.dev https://api.todoist.com; " +
   "frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests";
 
+/* events a visit can report: visit, questions 2-5, steps 2-5, plan built, sent to Todoist, calendar file, summary file */
+const HIT_EVENTS = /^(v|q[2-5]|s[2-5]|built|td|ics|file)$/;
+
 /* ---------- handler ---------- */
 export default {
   async fetch(req, env) {
@@ -223,6 +226,13 @@ export default {
         if (raw.length > 20000) return reply(413, { error: 'bad_input' }, corsH);
         try { abody = JSON.parse(raw); } catch { return reply(400, { error: 'bad_input' }, corsH); }
       }
+      if (path === '/admin/stats' && req.method === 'GET') {
+        if (!env.SUGGESTIONS) return reply(200, { days: [] }, corsH);
+        const list = await env.SUGGESTIONS.list({ prefix: 'stats:' });
+        const keys = list.keys.map((k) => k.name).sort().slice(-60);
+        const days = await Promise.all(keys.map(async (k) => ({ date: k.slice(6), counts: (await env.SUGGESTIONS.get(k, 'json')) || {} })));
+        return reply(200, { days }, corsH);
+      }
       try {
         const [status, out] = await handleAdmin(path, req.method, abody, env);
         return reply(status, out, corsH);
@@ -230,6 +240,22 @@ export default {
         console.error('admin error', path, e && e.status, e && e.name);
         return reply(502, { error: 'upstream' }, corsH);
       }
+    }
+
+    /* ---- anonymous step counts: a beacon once per visit, daily totals only ---- */
+    if (req.method === 'POST' && path === '/hit') {
+      const raw = await req.text();
+      if (raw.length > 400) return reply(413, { error: 'bad_input' }, corsH);
+      let hb; try { hb = JSON.parse(raw); } catch { return reply(400, { error: 'bad_input' }, corsH); }
+      const flags = Array.isArray(hb && hb.f) ? [...new Set(hb.f.filter((x) => typeof x === 'string' && HIT_EVENTS.test(x)))] : [];
+      if (!flags.length) return reply(400, { error: 'bad_input' }, corsH);
+      if (env.SUGGESTIONS) {
+        const key = 'stats:' + new Date().toISOString().slice(0, 10);
+        const day = (await env.SUGGESTIONS.get(key, 'json')) || {};
+        flags.forEach((f) => { day[f] = (day[f] || 0) + 1; });
+        await env.SUGGESTIONS.put(key, JSON.stringify(day), { expirationTtl: 60 * 60 * 24 * 400 });
+      }
+      return new Response(null, { status: 204, headers: { ...corsH, ...SECURITY_HEADERS } });
     }
 
     /* ---- which features are configured on this server (no secrets, just yes/no) ---- */
