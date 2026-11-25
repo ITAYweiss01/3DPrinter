@@ -29,6 +29,7 @@
         <a href="#build">1. מטרה</a>
         <a href="#plan">2. תוכנית <span class="badge" id="navCount" hidden></span></a>
         <a href="#finish">3. סיכום ו־Todoist</a>
+        <a href="#widget">ווידג'ט</a>
       </nav>
       <button class="icon-btn" id="theme" type="button" aria-label="החלף מצב תצוגה" title="החלף מצב תצוגה">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
@@ -160,11 +161,112 @@
             <button type="button" class="btn small primary" id="tdSend">שלח ל־Todoist</button>
             <button type="button" class="btn small ghost" id="tdDisconnect" hidden>נתק</button>
           </div>
+          <p class="note"><a href="#widget">אין לך Todoist? ואיך מוסיפים ווידג'ט למסך הבית?</a></p>
           <p class="note" id="tdStatus" role="status" aria-live="polite"></p>
         </div>
       </div>
       <textarea id="copybox" readonly aria-label="הטקסט להעתקה" hidden></textarea>
       <p class="note">התוכנית נשמרת רק בדפדפן הזה עד שתוריד אותה או תשלח ל־Todoist.</p>
+    </section>
+
+    <section id="widget" class="panel guide">
+      <p class="step">מה עכשיו?</p>
+      <h2>ממשיכים ב־Todoist, ישר ממסך הבית</h2>
+      <p class="muted">Todoist היא אפליקציית רשימת משימות חינמית לאייפון ולאנדרואיד. כששולחים אליה את התוכנית, כל הרגל נהיה משימה שחוזרת לפי הימים והשעות שקבעת, בפרויקט בשם "הרגלים". מסמנים עיגול, והמשימה קופצת לפעם הבאה. ככה המעקב קורה בטלפון, בלי לחזור לאתר.</p>
+
+      <ol class="guide-steps guide-intro">
+        <li><b>מורידים את Todoist</b> מה־App Store או מ־Google Play ונרשמים בחינם. <a href="https://todoist.com/downloads" target="_blank" rel="noopener noreferrer">לעמוד ההורדה</a></li>
+        <li><b>שולחים את התוכנית</b> בשלב 3 למעלה: "חבר את Todoist ושלח".</li>
+        <li><b>מוסיפים ווידג'ט</b> למסך הבית, כדי לראות ולסמן את ההרגלים בלי לפתוח את האפליקציה:</li>
+      </ol>
+
+      <div class="seg guide-tabs" role="tablist" aria-label="סוג טלפון">
+        <button type="button" role="tab" id="tabIos" aria-selected="true" aria-controls="guideIos">אייפון</button>
+        <button type="button" role="tab" id="tabAndroid" aria-selected="false" aria-controls="guideAndroid">אנדרואיד</button>
+      </div>
+
+      <ol class="guide-cards" id="guideIos" role="tabpanel" aria-labelledby="tabIos">
+        <li>
+          <svg viewBox="0 0 120 200" aria-hidden="true" class="ill">
+            <rect class="ill-phone" x="6" y="4" width="108" height="192" rx="18"/>
+            <g class="ill-app wiggle"><rect x="20" y="30" width="22" height="22" rx="6"/><rect x="49" y="30" width="22" height="22" rx="6"/><rect x="78" y="30" width="22" height="22" rx="6"/>
+            <rect x="20" y="62" width="22" height="22" rx="6"/><rect x="49" y="62" width="22" height="22" rx="6"/><rect x="78" y="62" width="22" height="22" rx="6"/></g>
+            <rect class="ill-pill" x="14" y="12" width="26" height="10" rx="5"/><text class="ill-t" x="27" y="19.5">ערוך</text>
+            <circle class="ill-touch" cx="62" cy="140" r="12"/><circle class="ill-touch-c" cx="62" cy="140" r="5"/>
+          </svg>
+          <p><b>1.</b> לוחצים לחיצה ארוכה על מקום ריק במסך הבית, עד שהאפליקציות רועדות.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 120 200" aria-hidden="true" class="ill">
+            <rect class="ill-phone" x="6" y="4" width="108" height="192" rx="18"/>
+            <rect class="ill-pill hl" x="14" y="12" width="26" height="10" rx="5"/><text class="ill-t" x="27" y="19.5">ערוך</text>
+            <rect class="ill-menu" x="14" y="26" width="70" height="42" rx="8"/>
+            <rect class="ill-row hl" x="18" y="30" width="62" height="14" rx="5"/><text class="ill-t big" x="49" y="40">הוסף וידג'ט</text>
+            <text class="ill-t big dim" x="49" y="59">התאמה אישית</text>
+          </svg>
+          <p><b>2.</b> לוחצים <b>"ערוך"</b> בפינה, ואז <b>"הוסף וידג'ט"</b>. בגרסאות ישנות יש כפתור <b>+</b>.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 120 200" aria-hidden="true" class="ill">
+            <rect class="ill-phone" x="6" y="4" width="108" height="192" rx="18"/>
+            <rect class="ill-search" x="16" y="16" width="88" height="14" rx="7"/><text class="ill-t big" x="60" y="26">Todoist</text>
+            <rect class="ill-widget" x="22" y="44" width="76" height="76" rx="14"/>
+            <g class="ill-lines"><circle cx="86" cy="62" r="4"/><rect x="34" y="60" width="44" height="4" rx="2"/><circle cx="86" cy="78" r="4"/><rect x="40" y="76" width="38" height="4" rx="2"/><circle cx="86" cy="94" r="4"/><rect x="30" y="92" width="48" height="4" rx="2"/></g>
+            <g class="ill-dots"><circle cx="54" cy="130" r="2.5"/><circle cx="62" cy="130" r="2.5" class="on"/><circle cx="70" cy="130" r="2.5"/></g>
+            <rect class="ill-btn" x="30" y="160" width="60" height="16" rx="8"/><text class="ill-t big light" x="60" y="171">הוסף וידג'ט</text>
+          </svg>
+          <p><b>3.</b> מחפשים <b>Todoist</b>, מחליקים לגודל שנוח לך, ולוחצים <b>"הוסף וידג'ט"</b>.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 120 200" aria-hidden="true" class="ill">
+            <rect class="ill-phone" x="6" y="4" width="108" height="192" rx="18"/>
+            <rect class="ill-widget" x="16" y="20" width="88" height="80" rx="14"/>
+            <text class="ill-t big acc" x="88" y="34" text-anchor="end">הרגלים</text>
+            <g class="ill-lines"><circle cx="92" cy="50" r="4"/><rect x="36" y="48" width="48" height="4" rx="2"/><circle cx="92" cy="66" r="4"/><rect x="44" y="64" width="40" height="4" rx="2"/><circle cx="92" cy="82" r="4" class="done"/><rect x="40" y="80" width="44" height="4" rx="2" class="done"/></g>
+            <rect class="ill-menu" x="24" y="108" width="72" height="30" rx="8"/>
+            <rect class="ill-row hl" x="28" y="112" width="64" height="12" rx="5"/><text class="ill-t big" x="60" y="121">ערוך וידג'ט</text>
+            <text class="ill-t big dim" x="60" y="133">פרויקט: הרגלים</text>
+          </svg>
+          <p><b>4.</b> לחיצה ארוכה על הווידג'ט, <b>"ערוך וידג'ט"</b>, ובוחרים את הפרויקט <b>"הרגלים"</b>. מסמנים עיגול כשעשית.</p>
+        </li>
+      </ol>
+
+      <ol class="guide-cards" id="guideAndroid" role="tabpanel" aria-labelledby="tabAndroid" hidden>
+        <li>
+          <svg viewBox="0 0 120 200" aria-hidden="true" class="ill">
+            <rect class="ill-phone" x="6" y="4" width="108" height="192" rx="14"/>
+            <g class="ill-app"><circle cx="31" cy="40" r="11"/><circle cx="60" cy="40" r="11"/><circle cx="89" cy="40" r="11"/></g>
+            <rect class="ill-menu" x="30" y="118" width="64" height="44" rx="8"/>
+            <rect class="ill-row hl" x="34" y="122" width="56" height="14" rx="5"/><text class="ill-t big" x="62" y="132">ווידג'טים</text>
+            <text class="ill-t big dim" x="62" y="153">טפטים</text>
+            <circle class="ill-touch" cx="62" cy="96" r="12"/><circle class="ill-touch-c" cx="62" cy="96" r="5"/>
+          </svg>
+          <p><b>1.</b> לחיצה ארוכה על מקום ריק במסך הבית, ואז <b>"ווידג'טים"</b>.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 120 200" aria-hidden="true" class="ill">
+            <rect class="ill-phone" x="6" y="4" width="108" height="192" rx="14"/>
+            <rect class="ill-search" x="16" y="16" width="88" height="14" rx="7"/><text class="ill-t big" x="60" y="26">Todoist</text>
+            <rect class="ill-widget" x="22" y="42" width="76" height="70" rx="10"/>
+            <g class="ill-lines"><circle cx="86" cy="58" r="4"/><rect x="34" y="56" width="44" height="4" rx="2"/><circle cx="86" cy="74" r="4"/><rect x="40" y="72" width="38" height="4" rx="2"/><circle cx="86" cy="90" r="4"/><rect x="30" y="88" width="48" height="4" rx="2"/></g>
+            <path class="ill-arrow" d="M60 120 V160 M52 152 L60 160 L68 152"/>
+            <circle class="ill-touch" cx="60" cy="80" r="12"/>
+          </svg>
+          <p><b>2.</b> מוצאים את <b>Todoist</b>, לוחצים לחיצה ארוכה על ווידג'ט הרשימה וגוררים אותו למסך.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 120 200" aria-hidden="true" class="ill">
+            <rect class="ill-phone" x="6" y="4" width="108" height="192" rx="14"/>
+            <rect class="ill-menu" x="16" y="24" width="88" height="92" rx="10"/>
+            <text class="ill-t big" x="88" y="40" text-anchor="end">בחר רשימה</text>
+            <text class="ill-t big dim" x="88" y="58" text-anchor="end">היום</text>
+            <rect class="ill-row hl" x="20" y="66" width="80" height="14" rx="5"/><text class="ill-t big" x="88" y="76" text-anchor="end">הרגלים</text>
+            <text class="ill-t big dim" x="88" y="96" text-anchor="end">Inbox</text>
+          </svg>
+          <p><b>3.</b> בוחרים את הפרויקט <b>"הרגלים"</b>. הווידג'ט יציג רק את ההרגלים שלך.</p>
+        </li>
+      </ol>
+      <p class="note">השמות המדויקים של הכפתורים יכולים להשתנות קצת לפי גרסת הטלפון והשפה שלו.</p>
     </section>
 
     <section id="laws" class="laws">
@@ -173,7 +275,7 @@
     </section>
   </main>
 
-  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 11</span></footer>
+  <footer class="wrap foot">בהשראת הספר Atomic Habits מאת ג'יימס קליר. <span class="ver">גרסה 12</span></footer>
 
   <div id="printSummary" class="print-summary"></div>
 
