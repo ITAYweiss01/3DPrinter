@@ -120,7 +120,9 @@
     return list;
   }
 
-  function stackLine(t) { return 'אחרי ש' + t.starter.cue + ', ' + t.starter.text + '.'; }
+  // "אחרי שאני קם, ..." for a routine moment; a fixed time ("ביום שישי", "ב־15:00") stands on its own
+  function anchor(cue) { return /^ב/.test(cue) ? cue : 'אחרי ש' + cue; }
+  function stackLine(t) { return anchor(t.starter.cue) + ', ' + t.starter.text + '.'; }
 
   function generate(goal, areas) {
     var matched = matchDomains(goal, areas);
@@ -329,7 +331,7 @@
     var sl = $('dstack');
     sl.textContent = '';
     $('startHere').hidden = i !== 0;
-    var b1 = document.createElement('b'); b1.textContent = 'אחרי ש' + t.starter.cue;
+    var b1 = document.createElement('b'); b1.textContent = anchor(t.starter.cue);
     sl.appendChild(b1);
     sl.appendChild(document.createTextNode(', ' + t.starter.text + '.'));
 

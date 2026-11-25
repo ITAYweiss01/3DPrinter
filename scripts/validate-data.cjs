@@ -21,7 +21,15 @@ for (const [dom, t] of all) {
     if (/\.$/.test(h)) errs.push(`${dom}/${t.name}: habit ends with a period: ${h}`);
   });
   if (!/^אני /.test(t.starter.text)) errs.push(`${dom}/${t.name}: starter text should start with "אני": ${t.starter.text}`);
-  else if (/^אחרי/.test(t.starter.cue)) errs.push(`${dom}/${t.name}: cue must not start with "אחרי"`);
+  // a habit hangs on a fixed moment of the routine or a set frequency, never on an event
+  // ("when I get angry", "when something fails", "when I feel an urge")
+  const EVENT_CUE = /מישהו|משהו|דחף|מרגיש|בא לי|עולה לי|רואה|שומע|פוגש|מבטיח|מתלבט|ידיעה מסעירה|תזכורת|נכנס לי תשלום|יש לי רעיון|לא מקשיב|מבקש|משתבש|לא הצליח|עומד להגיד|מגיע הרגע|שבור|ערב פנוי/;
+  if (EVENT_CUE.test(t.starter.cue)) errs.push(`${dom}/${t.name}: cue is an event, not a routine moment: ${t.starter.cue}`);
+  const EVENT_HABIT = /כשמתעצבנים|כשמתוסכלים|כשכועסים|כשקשה|כשטעיתי|כשצריך|כשמשהו|כשמישהו|כשרואים|כשכואב|כשאפשר|כשמרגישים|כשהשיחה|מעידה|נכנעים|לפני תגובה|לפני שעונים|באותו יום|ברגע ש|בגרסה קטנה יותר|כשמגיעה|כשנגמר/;
+  t.habits.concat([t.stretch, t.starter.task]).forEach((h) => {
+    if (EVENT_HABIT.test(h)) errs.push(`${dom}/${t.name}: habit depends on an event: ${h}`);
+  });
+  if (t.starter && /^אחרי/.test(t.starter.cue || '')) errs.push(`${dom}/${t.name}: cue must not start with "אחרי"`);
   if (new Set(t.habits).size !== t.habits.length) errs.push(`${dom}/${t.name}: duplicate habit`);
 }
 Object.entries(names).filter(([, d]) => d.length > 1).forEach(([n, d]) => errs.push(`duplicate trait name "${n}" in ${d.join(', ')}`));
