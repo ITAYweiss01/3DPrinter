@@ -1,5 +1,5 @@
 /* Offline cache: network first for pages, cache fallback. */
-var CACHE = 'habits-v42';
+var CACHE = 'habits-v43';
 var FILES = ['./', 'index.html', 'privacy.html', 'config.js', 'css/style.css', 'js/data.js', 'js/ideas.js', 'js/app.js', 'js/ai.js', 'js/theme.js', 'js/data-extra.js', 'js/todoist.js', 'js/screen.js', 'js/steps.js', 'icon.svg', 'manifest.webmanifest'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES.map(function (f) { return new Request(f, { cache: 'reload' }); })); }).then(function () { return self.skipWaiting(); }));

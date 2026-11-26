@@ -45,7 +45,9 @@ function safeEqual(a, b) {
 export function isAdmin(req, env) {
   const h = req.headers.get('Authorization') || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : '';
-  return !!env.ADMIN_TOKEN && env.ADMIN_TOKEN.length >= 24 && !!token && safeEqual(token, env.ADMIN_TOKEN);
+  // a space or line break pasted into the dashboard along with the secret should not lock the owner out
+  const secret = typeof env.ADMIN_TOKEN === 'string' ? env.ADMIN_TOKEN.trim() : '';
+  return secret.length >= 24 && !!token && safeEqual(token.trim(), secret);
 }
 
 /* ---------- domain validation (same shape as js/data.js) ---------- */
