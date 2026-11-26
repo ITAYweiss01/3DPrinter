@@ -179,6 +179,13 @@ await t('admin requires the token', async () => {
   assert.equal((await admin('/admin/suggestions', null, { ...e, ADMIN_TOKEN: 'short' }, 'short')).status, 401, 'short tokens are refused');
   assert.equal((await admin('/admin/suggestions', null, e)).status, 200);
 });
+await t('admin token: trailing whitespace in the secret is ignored, short secrets never work', async () => {
+  const e = { ...kvEnv(), ADMIN_TOKEN: ADMIN + '\n' };
+  assert.equal((await admin('/admin/suggestions', null, e)).status, 200);
+  const short = { ...kvEnv(), ADMIN_TOKEN: 'short-pass' };
+  assert.equal((await admin('/admin/suggestions', null, short, 'short-pass')).status, 401);
+});
+
 await t('failed admin sign-ins get rate limited', async () => {
   const e = kvEnv(); const codes = [];
   for (let i = 0; i < 7; i++) {
