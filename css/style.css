@@ -510,7 +510,7 @@ html.intro-on, html.intro-on body { overflow: hidden; }
   .intro.b .phone { animation: rise .6s .25s ease-out both; }
   .intro.b mark { background-size: 0 100%; animation: sweep .6s .5s ease-out forwards; }
 }
-mark { background: linear-gradient(var(--hl), var(--hl)) no-repeat right 70% / 100% 55%; color: inherit; padding: 0 .15em; white-space: nowrap; }
+mark { background: linear-gradient(var(--hl), var(--hl)) no-repeat right 70% / 100% 55%; color: var(--hl-ink); padding: 0 .15em; white-space: nowrap; }
 .intro:focus { outline: none; }
 @keyframes sweep { to { background-size: 100% 55%; } }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -616,7 +616,7 @@ details.more[open] summary { margin-bottom: 8px; }
 /* Buy me a coffee */
 .tip { margin-top: 16px; padding: 14px; border: 1.5px dashed var(--p-stroke); border-radius: 12px; background: color-mix(in srgb, var(--hl) 14%, transparent); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .tip p { margin: 0; flex: 1 1 220px; font-size: 15px; }
-.tip .btn { text-decoration: none; }
+.tip .btn { text-decoration: none; color: var(--fg); background: var(--surface); border-color: var(--line); }
 
 /* "לפנות אליך ב: אתה / את" */
 .gender { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; color: var(--muted); }
