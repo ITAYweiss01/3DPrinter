@@ -798,7 +798,7 @@
     { label: 'חזרה לכושר', areas: ['fitness', 'sleep'], when: 'morning', traits: ['פעיל', 'רענן'] },
     { label: 'תקופת מבחנים', areas: ['study', 'focus'], when: 'evening', traits: ['שקדן', 'מרוכז'] },
     { label: 'פחות טלפון', areas: ['focus', 'reading'], when: 'evening', traits: ['מרוכז', 'תולעת ספרים'] },
-    { label: 'בוקר רגוע', areas: ['sleep', 'mind'], when: 'morning', traits: ['משכים קום', 'רגוע'] },
+    { label: 'בוקר רגוע', areas: ['sleep', 'mind'], when: 'morning', traits: ['איש של בוקר', 'רגוע'] },
     { label: 'לשים כסף בצד', areas: ['money'], when: 'any', traits: ['חסכן', 'מבין בכסף'] },
     { label: 'אחרי השחרור', areas: ['money', 'growth'], when: 'any', traits: ['חסכן', 'שאפתן'] },
     { label: 'הורות טרייה', areas: ['parenting', 'mind'], when: 'any', traits: ['הורה רגוע', 'רגוע'] },

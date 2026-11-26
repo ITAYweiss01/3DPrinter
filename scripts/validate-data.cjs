@@ -11,13 +11,15 @@ const all = D.domains.flatMap((d) => d.traits.map((t) => [d.id, t])).concat(D.ge
 for (const [dom, t] of all) {
   names[t.name] = (names[t.name] || []).concat(dom);
   const words = t.name.trim().split(/\s+/);
-  if (words.length > 2) errs.push(`${dom}: trait name has more than 2 words: ${t.name}`);
+  // up to 2 words, or 3 short ones ("איש של בוקר"): the map shows the first word, then the rest
+  const fits = (ws) => ws.length <= 2 || (ws.length === 3 && ws.join('').length <= 10);
+  if (!fits(words)) errs.push(`${dom}: trait name too long for the map: ${t.name}`);
   words.forEach((w) => { if ([...w].length > 8) errs.push(`${dom}: word longer than 8 letters (won't fit the map): ${w}`); });
   // the feminine name (for "את") follows the same size rules: it has to fit the map too
   if (!t.name_f) errs.push(`${dom}/${t.name}: missing name_f`);
   else {
     const fw = t.name_f.trim().split(/\s+/);
-    if (fw.length > 2) errs.push(`${dom}: name_f has more than 2 words: ${t.name_f}`);
+    if (!fits(fw)) errs.push(`${dom}: name_f too long for the map: ${t.name_f}`);
     fw.forEach((w) => { if ([...w].length > 8) errs.push(`${dom}: name_f word longer than 8 letters: ${w}`); });
   }
   if (t.habits.length !== 5) errs.push(`${dom}/${t.name}: ${t.habits.length} habits (expected 5)`);
@@ -35,6 +37,11 @@ for (const [dom, t] of all) {
   const EVENT_HABIT = /כשמתעצבנים|כשמתוסכלים|כשכועסים|כשקשה|כשטעיתי|כשצריך|כשמשהו|כשמישהו|כשרואים|כשכואב|כשאפשר|כשמרגישים|כשהשיחה|מעידה|נכנעים|לפני תגובה|לפני שעונים|באותו יום|ברגע ש|בגרסה קטנה יותר|כשמגיעה|כשנגמר/;
   t.habits.concat([t.stretch, t.starter.task]).forEach((h) => {
     if (EVENT_HABIT.test(h)) errs.push(`${dom}/${t.name}: habit depends on an event: ${h}`);
+  });
+  // a habit repeats at least every week: monthly or yearly is too far apart to become automatic
+  const RARE = /בחודש|בשנה|חודשי|שנתי|לסוף החודש|לשלושה חודשים/;
+  t.habits.concat([t.stretch, t.starter.task, t.starter.cue]).forEach((h) => {
+    if (RARE.test(h)) errs.push(`${dom}/${t.name}: less often than weekly: ${h}`);
   });
   if (t.starter && /^אחרי/.test(t.starter.cue || '')) errs.push(`${dom}/${t.name}: cue must not start with "אחרי"`);
   if (new Set(t.habits).size !== t.habits.length) errs.push(`${dom}/${t.name}: duplicate habit`);
