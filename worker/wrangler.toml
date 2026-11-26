@@ -4,6 +4,12 @@ compatibility_date = "2026-11-01"
 
 # The site itself is served from this Worker too: build-site.mjs bundles the site
 # files from the repo root into site-files.js on every deploy.
+# The site's own domain (DNS is on Cloudflare). www redirects to the bare domain in worker.js.
+routes = [
+  { pattern = "hergelimktanim.com", custom_domain = true },
+  { pattern = "www.hergelimktanim.com", custom_domain = true }
+]
+
 [build]
 command = "node build-site.mjs"
 
@@ -14,7 +20,7 @@ command = "node build-site.mjs"
 
 [vars]
 # Required. Comma-separated origins allowed to call the Worker. Empty = everything blocked.
-ALLOWED_ORIGINS = "https://itayweiss01.github.io,https://api.tiny-habits-plan.workers.dev"
+ALLOWED_ORIGINS = "https://hergelimktanim.com,https://www.hergelimktanim.com,https://itayweiss01.github.io,https://api.tiny-habits-plan.workers.dev"
 GITHUB_REPO = "ITAYweiss01/3DPrinter"
 GITHUB_BASE = "main"
 
@@ -41,7 +47,7 @@ id = "f7a0fe24cf684eeaa0f603f82198a0af"
 
 # Todoist connection (each visitor connects their own account).
 # 1. Create an app at https://app.todoist.com/app/settings/integrations/app-management
-#    OAuth redirect URL: https://<your-worker>.workers.dev/todoist/callback
+#    OAuth redirect URL: https://hergelimktanim.com/todoist/callback (the workers.dev address works too)
 # 2. Set both values as Worker secrets (dashboard: Workers & Pages > api > Settings >
 #    Variables and Secrets, type Secret), or with wrangler:
 #      npx wrangler secret put TODOIST_CLIENT_ID

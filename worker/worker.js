@@ -152,7 +152,7 @@ function errorCode(e) {
 }
 
 const SITE_CSP = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' https://fonts.googleapis.com; " +
-  "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.workers.dev https://api.todoist.com; " +
+  "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://hergelimktanim.com https://*.workers.dev https://api.todoist.com; " +
   "frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests";
 
 /* events a visit can report: visit, questions 2-5, steps 2-5, plan built, sent to Todoist, calendar file, summary file, coffee link */
@@ -161,16 +161,25 @@ const HIT_EVENTS = /^(v|q[2-5]|s[2-5]|built|td|ics|file|tip)$/;
 /* ---------- handler ---------- */
 export default {
   async fetch(req, env) {
+    // www.hergelimktanim.com -> hergelimktanim.com (one address for links and previews)
+    const host = new URL(req.url).hostname;
+    if (host === 'www.hergelimktanim.com') {
+      const to = new URL(req.url); to.hostname = 'hergelimktanim.com';
+      return Response.redirect(to.toString(), 301);
+    }
+
     // The public site (same files as on GitHub Pages), with security headers.
     if (req.method === 'GET' || req.method === 'HEAD') {
       const p = new URL(req.url).pathname; // query strings like ?v=13 are only for cache-busting
       const file = SITE[p === '/' ? '/index.html' : p];
       if (file) {
-        return new Response(req.method === 'HEAD' ? null : file.body, {
+        const body = file.b64 ? Uint8Array.from(atob(file.body), (c) => c.charCodeAt(0)) : file.body;
+        return new Response(req.method === 'HEAD' ? null : body, {
           headers: {
             'Content-Type': file.type,
             // always revalidate: the site is small, and stale CSS with new HTML breaks the layout
-            'Cache-Control': 'no-cache',
+            // images change name (?v=) when they change; pages always revalidate
+            'Cache-Control': file.b64 ? 'public, max-age=86400' : 'no-cache',
             'X-Content-Type-Options': 'nosniff',
             'Referrer-Policy': 'no-referrer',
             'X-Frame-Options': 'DENY',
