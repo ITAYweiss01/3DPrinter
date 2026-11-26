@@ -510,9 +510,10 @@ html.intro-on, html.intro-on body { overflow: hidden; }
   .intro.b .phone { animation: rise .6s .25s ease-out both; }
   .intro.b mark { background-size: 0 100%; animation: sweep .6s .5s ease-out forwards; }
 }
-mark { background: linear-gradient(var(--hl), var(--hl)) no-repeat right 70% / 100% 55%; color: var(--hl-ink); padding: 0 .15em; white-space: nowrap; }
+/* a highlighter mark: the whole word sits inside the yellow, with room on every side */
+mark { display: inline-block; background: linear-gradient(var(--hl), var(--hl)) no-repeat right center / 100% 100%; color: var(--hl-ink); padding: .02em .32em .1em; border-radius: .28em; line-height: 1.15; transform: rotate(-1.5deg); white-space: nowrap; }
 .intro:focus { outline: none; }
-@keyframes sweep { to { background-size: 100% 55%; } }
+@keyframes sweep { to { background-size: 100% 100%; } }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .intro-cap { margin: 0; font-weight: 700; font-family: var(--font-hand); font-size: 18px; min-height: 1.5em; }
 .intro-go { min-width: 200px; }
