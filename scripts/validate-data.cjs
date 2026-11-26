@@ -39,7 +39,7 @@ for (const [dom, t] of all) {
     if (EVENT_HABIT.test(h)) errs.push(`${dom}/${t.name}: habit depends on an event: ${h}`);
   });
   // a habit repeats at least every week: monthly or yearly is too far apart to become automatic
-  const RARE = /בחודש|בשנה|חודשי|שנתי|לסוף החודש|לשלושה חודשים/;
+  const RARE = /בחודש|בשנה|חודשי|שנתי|לסוף החודש|לשלושה חודשים|כל חודש|חצי שנה|רבעון|משכורת|ביום השנה|בשבועיים|בכל עונה/;
   t.habits.concat([t.stretch, t.starter.task, t.starter.cue]).forEach((h) => {
     if (RARE.test(h)) errs.push(`${dom}/${t.name}: less often than weekly: ${h}`);
   });
